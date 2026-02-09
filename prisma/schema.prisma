@@ -1,0 +1,503 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  azureAdId       String?   @unique
+  email           String    @unique
+  displayName     String
+  firstName       String?
+  lastName        String?
+  department      String?
+  jobTitle        String?
+  profileImage    String?
+  role            UserRole  @default(EMPLOYEE) // Legacy: remove after migration
+  roleId          String?   @db.ObjectId
+  customRole      Role?     @relation(fields: [roleId], references: [id])
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  posts           Post[]    @relation("UserPosts")
+  pinnedPosts     Post[]    @relation("PinnedPosts")
+  comments        Comment[]
+  favorites       Favorite[]
+  pollVotes       PollVote[]
+  eventRegistrations EventRegistration[]
+  notifications   Notification[]
+  likes           PostLike[]
+
+  // Settings & Chat
+  settings        UserSettings?
+  quickLinks      QuickLink[]      @relation("QuickLinks")
+  conversationIds String[]     @db.ObjectId
+  conversations   Conversation[] @relation(fields: [conversationIds], references: [id])
+  messages        Message[]
+
+  // Chat Extras
+  chatSettings    ConversationSettings[]
+  messageReads    MessageRead[]
+  typingIndicators TypingIndicator[]
+}
+
+enum UserRole {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+  HQ_ADMIN
+}
+
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  permissionIds String[] @db.ObjectId
+  permissions   Permission[] @relation(fields: [permissionIds], references: [id])
+  users         User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Permission {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  roleIds     String[] @db.ObjectId
+  roles       Role[]   @relation(fields: [roleIds], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// USER SETTINGS
+// ============================================
+
+model UserSettings {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @unique @db.ObjectId
+  theme           Theme     @default(SYSTEM)
+  headerOrder     String[]  @default(["home", "discussions", "training", "hubs", "support"])
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model QuickLink {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
+  title           String
+  url             String
+  icon            String?
+  order           Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation("QuickLinks", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, order])
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+// ============================================
+// CHAT & MESSAGING
+// ============================================
+
+model Conversation {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?   // For group chats
+  isGroup         Boolean   @default(false)
+  image           String?   // For group chats
+  lastMessageAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  userIds         String[]  @db.ObjectId
+  users           User[]    @relation(fields: [userIds], references: [id])
+
+  messages        Message[]
+
+  // Extras
+  settings        ConversationSettings[]
+
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId  String    @db.ObjectId
+  senderId        String    @db.ObjectId
+  content         String?
+  image           String?
+  fileUrl         String?
+  fileName        String?
+  isEdited        Boolean   @default(false)
+  editedAt        DateTime?
+  deletedAt       DateTime? // Soft delete
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User         @relation(fields: [senderId], references: [id])
+  reactions       Reaction[]
+  reads           MessageRead[]
+
+  replyToId      String?  @db.ObjectId
+  replyTo        Message? @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies        Message[] @relation("ReplyTo")
+
+  @@index([conversationId, createdAt])
+}
+
+model Reaction {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  messageId       String    @db.ObjectId
+  userId          String    @db.ObjectId
+  emoji           String
+
+  message         Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+}
+
+model ConversationSettings {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId  String   @db.ObjectId
+  userId          String   @db.ObjectId
+  isMuted         Boolean  @default(false)
+  mutedUntil      DateTime?
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model TypingIndicator {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId  String   @db.ObjectId
+  userId          String   @db.ObjectId
+  lastTypingAt    DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId, lastTypingAt])
+}
+
+model MessageRead {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  messageId  String   @db.ObjectId
+  userId     String   @db.ObjectId
+  readAt     DateTime @default(now())
+
+  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+
+// ============================================
+// POSTS & CONTENT
+// ============================================
+
+model Post {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  type            PostType
+  title           String
+  content         String
+  imageUrl        String?
+  authorId        String      @db.ObjectId
+  isPinned        Boolean     @default(false)
+  pinnedAt        DateTime?
+  pinnedById      String?     @db.ObjectId
+  viewCount       Int         @default(0)
+  likeCount       Int         @default(0)
+  commentCount    Int         @default(0)
+  isPublished     Boolean     @default(true)
+  publishedAt     DateTime?
+
+  // Announcement-specific fields
+  announcementType AnnouncementType? @default(REGULAR)
+  sharePointUrl     String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  author          User        @relation("UserPosts", fields: [authorId], references: [id])
+  pinnedBy        User?       @relation("PinnedPosts", fields: [pinnedById], references: [id])
+  comments        Comment[]
+  tagIds          String[]    @db.ObjectId
+  tags            Tag[]       @relation(fields: [tagIds], references: [id])
+  favorites       Favorite[]
+  likes           PostLike[]
+  attachments     Attachment[]
+
+  // Type-specific data
+  poll            Poll?
+  event           Event?
+
+  @@index([type, createdAt])
+  @@index([isPinned, createdAt])
+  @@index([authorId])
+}
+
+enum AnnouncementType {
+  REGULAR
+  SHAREPOINT_LINK
+}
+
+enum PostType {
+  POST
+  POLL
+  EVENT
+  ANNOUNCEMENT
+}
+
+// ============================================
+// POLLS
+// ============================================
+
+model Poll {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String      @unique @db.ObjectId
+  endsAt          DateTime?
+  allowMultiple   Boolean     @default(false)
+  isAnonymous     Boolean     @default(false)
+
+  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options         PollOption[]
+  votes           PollVote[]
+}
+
+model PollOption {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  pollId          String      @db.ObjectId
+  text            String
+  order           Int
+  voteCount       Int         @default(0)
+
+  poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes           PollVote[]
+
+  @@index([pollId])
+}
+
+model PollVote {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  pollId          String      @db.ObjectId
+  optionId        String      @db.ObjectId
+  userId          String      @db.ObjectId
+  createdAt       DateTime    @default(now())
+
+  poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option          PollOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId, optionId])
+  @@index([userId])
+}
+
+// ============================================
+// EVENTS
+// ============================================
+
+model Event {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String      @unique @db.ObjectId
+  startDate       DateTime
+  endDate         DateTime?
+  location        String?
+  isVirtual       Boolean     @default(false)
+  meetingLink     String?
+  maxAttendees    Int?
+  registrationDeadline DateTime?
+
+  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  registrations   EventRegistration[]
+}
+
+model EventRegistration {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  eventId         String      @db.ObjectId
+  userId          String      @db.ObjectId
+  status          RegistrationStatus @default(REGISTERED)
+  syncedToOutlook Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+
+  event           Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  WAITLIST
+  CANCELLED
+}
+
+// ============================================
+// COMMENTS
+// ============================================
+
+model Comment {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String      @db.ObjectId
+  authorId        String      @db.ObjectId
+  content         String
+  parentId        String?     @db.ObjectId
+  likeCount       Int         @default(0)
+  isEdited        Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author          User        @relation(fields: [authorId], references: [id])
+  parent          Comment?    @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies         Comment[]   @relation("CommentReplies")
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+}
+
+// ============================================
+// FAVORITES
+// ============================================
+
+model Favorite {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String      @db.ObjectId
+  postId          String?     @db.ObjectId
+  hubId           String?     @db.ObjectId
+  type            FavoriteType
+  createdAt       DateTime    @default(now())
+
+  user            User        @relation(fields: [userId], references: [id])
+  post            Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hub             Hub?        @relation(fields: [hubId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, hubId])
+  @@index([userId])
+}
+
+enum FavoriteType {
+  POST
+  HUB_PAGE
+}
+
+// ============================================
+// TC HUBS
+// ============================================
+
+model Hub {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  slug            String      @unique
+  description     String?
+  icon            String?
+  sharePointUrl   String?
+  order           Int
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  favorites       Favorite[]
+
+  @@index([order])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String      @db.ObjectId
+  type            NotificationType
+  title           String
+  message         String
+  link            String?
+  isRead          Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+
+  user            User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead, createdAt])
+}
+
+enum NotificationType {
+  NEW_POST
+  NEW_COMMENT
+  NEW_POLL
+  NEW_EVENT
+  POLL_ENDING_SOON
+  EVENT_REMINDER
+  MENTION
+  SYSTEM
+}
+
+// ============================================
+// TAGS & ATTACHMENTS
+// ============================================
+
+model Tag {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  name            String      @unique
+  slug            String      @unique
+  color           String?
+
+  postIds         String[]    @db.ObjectId
+  posts           Post[]      @relation(fields: [postIds], references: [id])
+}
+
+model Attachment {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String      @db.ObjectId
+  fileName        String
+  fileUrl         String
+  fileType        String
+  fileSize        Int
+  createdAt       DateTime    @default(now())
+
+  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model PostLike {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  userId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
