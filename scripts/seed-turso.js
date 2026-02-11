@@ -45,14 +45,14 @@ async function main() {
         update: {
             description: 'Global administrator with role management',
             permissions: {
-                set: permissions.map(p => ({ id: p.id }))
+                set: permissions.map((p) => ({ id: p.id }))
             }
         },
         create: {
             name: 'HQ_Admin',
             description: 'Global administrator with role management',
             permissions: {
-                connect: permissions.map(p => ({ id: p.id }))
+                connect: permissions.map((p) => ({ id: p.id }))
             }
         }
     });

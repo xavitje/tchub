@@ -35,7 +35,7 @@ export default function DiscussionsPage() {
         if (!session?.user?.id) return;
 
         // Optimistic update
-        const updatedPosts = posts.map(p => {
+        const updatedPosts = posts.map((p: any) => {
             if (p.id === post.id) {
                 const isLiked = p.likedByMe;
                 return {

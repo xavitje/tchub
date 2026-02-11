@@ -8,7 +8,7 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.AZURE_AD_CLIENT_ID!,
             clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
             tenantId: process.env.AZURE_AD_TENANT_ID,
-            profile(profile) {
+            profile(profile: any) {
                 return {
                     id: profile.sub,
                     name: profile.name,
@@ -86,7 +86,7 @@ export const authOptions: NextAuthOptions = {
                             session.user.customRole = {
                                 id: dbUser.customRole.id,
                                 name: dbUser.customRole.name,
-                                permissions: dbUser.customRole.permissions.map(p => p.name)
+                                permissions: dbUser.customRole.permissions.map((p: any) => p.name)
                             };
                         } else {
                             // Fallback for non-migrated users

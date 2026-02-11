@@ -477,7 +477,7 @@ export default function AdminDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-light-400 bg-white">
-                                        {users.map(user => (
+                                        {users.map((user: any) => (
                                             <tr key={user.id} className="hover:bg-light-50 transition-colors">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="font-bold text-dark">{user.displayName}</div>
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                                                                 className="select text-xs h-8 py-0 min-w-[120px]"
                                                             >
                                                                 <option value="">Geen rol</option>
-                                                                {roles.map(r => (
+                                                                {roles.map((r: any) => (
                                                                     <option key={r.id} value={r.id}>{r.name}</option>
                                                                 ))}
                                                             </select>
@@ -589,7 +589,7 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {roles.map(role => (
+                            {roles.map((role: any) => (
                                 <div key={role.id} className="card p-6 flex flex-col hover:shadow-medium transition-all group">
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
@@ -876,7 +876,7 @@ export default function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-light-400 bg-white">
-                                    {hubs.map(hub => (
+                                    {hubs.map((hub: any) => (
                                         <tr key={hub.id} className="hover:bg-light-50 transition-colors">
                                             <td className="px-6 py-4 text-2xl text-center">{hub.icon}</td>
                                             <td className="px-6 py-4 pr-0">
@@ -984,7 +984,7 @@ export default function AdminDashboard() {
                             <div>
                                 <label className="block text-xs font-bold text-dark-100 uppercase mb-3">Systeem Rechten (Permissies)</label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {permissions.map(perm => {
+                                    {permissions.map((perm: any) => {
                                         const isSelected = roleForm.permissionIds.includes(perm.id);
                                         return (
                                             <button
@@ -992,7 +992,7 @@ export default function AdminDashboard() {
                                                 type="button"
                                                 onClick={() => {
                                                     const ids = isSelected
-                                                        ? roleForm.permissionIds.filter(id => id !== perm.id)
+                                                        ? roleForm.permissionIds.filter((id: any) => id !== perm.id)
                                                         : [...roleForm.permissionIds, perm.id];
                                                     setRoleForm({ ...roleForm, permissionIds: ids });
                                                 }}

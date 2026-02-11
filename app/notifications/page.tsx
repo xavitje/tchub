@@ -46,7 +46,7 @@ export default function NotificationsPage() {
     const markAsRead = async (id: string, link: string | null) => {
         try {
             await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+            setNotifications(prev => prev.map((n: any) => n.id === id ? { ...n, isRead: true } : n));
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
@@ -55,7 +55,7 @@ export default function NotificationsPage() {
     const markAllAsRead = async () => {
         try {
             await fetch('/api/notifications', { method: 'POST' });
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setNotifications(prev => prev.map((n: any) => ({ ...n, isRead: true })));
         } catch (error) {
             console.error('Error marking all as read:', error);
         }
@@ -104,7 +104,7 @@ export default function NotificationsPage() {
                             <p className="text-dark-100">Blijf op de hoogte van de laatste updates</p>
                         </div>
                     </div>
-                    {notifications.some(n => !n.isRead) && (
+                    {notifications.some((n: any) => !n.isRead) && (
                         <button
                             onClick={markAllAsRead}
                             className="text-sm font-semibold text-primary hover:underline"

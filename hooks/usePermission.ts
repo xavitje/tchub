@@ -18,7 +18,7 @@ export function usePermission() {
     };
 
     const hasAnyPermission = (perms: string[]) => {
-        return perms.some(p => hasPermission(p));
+        return perms.some((p: string) => hasPermission(p));
     };
 
     return {
