@@ -12,22 +12,39 @@ export default function DiscussionsPage() {
     const { showNotification } = useNotification();
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
     useEffect(() => {
-        async function fetchPosts() {
+        async function fetchData() {
             try {
-                const res = await fetch('/api/posts');
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setPosts(data);
+                // Fetch posts
+                const postsRes = await fetch('/api/posts');
+                const postsData = await postsRes.json();
+                if (Array.isArray(postsData)) {
+                    setPosts(postsData);
+                }
+
+                // Fetch trending topics
+                const trendingRes = await fetch('/api/discussions/trending');
+                const trendingData = await trendingRes.json();
+                if (Array.isArray(trendingData)) {
+                    setTrendingTopics(trendingData);
+                }
+
+                // Fetch recent activity
+                const activityRes = await fetch('/api/discussions/activity');
+                const activityData = await activityRes.json();
+                if (Array.isArray(activityData)) {
+                    setRecentActivity(activityData);
                 }
             } catch (error) {
-                console.error('Failed to fetch posts:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         }
-        fetchPosts();
+        fetchData();
     }, []);
 
     const handleLike = async (post: any, e: React.MouseEvent) => {
@@ -149,15 +166,19 @@ export default function DiscussionsPage() {
                                 <h3 className="text-lg font-semibold text-dark">Trending Topics</h3>
                             </div>
                             <div className="space-y-3">
-                                {['Marketing', 'Klantservice', 'Training', 'Productiviteit'].map((topic, i) => (
-                                    <button
-                                        key={i}
-                                        className="w-full text-left p-2 rounded-lg hover:bg-light-200 transition-colors"
-                                    >
-                                        <span className="text-primary font-medium">#{topic}</span>
-                                        <span className="text-xs text-dark-100 ml-2">{12 - i * 2} posts</span>
-                                    </button>
-                                ))}
+                                {trendingTopics.length === 0 ? (
+                                    <p className="text-sm text-dark-100">Geen trending topics beschikbaar.</p>
+                                ) : (
+                                    trendingTopics.map((topic) => (
+                                        <button
+                                            key={topic.id}
+                                            className="w-full text-left p-2 rounded-lg hover:bg-light-200 transition-colors"
+                                        >
+                                            <span className="text-primary font-medium">#{topic.name}</span>
+                                            <span className="text-xs text-dark-100 ml-2">{topic._count.posts} posts</span>
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </div>
 
@@ -168,17 +189,20 @@ export default function DiscussionsPage() {
                                 <h3 className="text-lg font-semibold text-dark">Recente Activiteit</h3>
                             </div>
                             <div className="space-y-3">
-                                {[
-                                    'Nieuwe reactie op "Q1 Richtlijnen"',
-                                    'Sarah heeft een bericht geliked',
-                                    'Nieuwe poll: "Beste training tijd"',
-                                    'Michael heeft gereageerd',
-                                ].map((activity, i) => (
-                                    <div key={i} className="text-sm text-dark-100 flex items-start gap-2">
-                                        <span className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5"></span>
-                                        <span>{activity}</span>
-                                    </div>
-                                ))}
+                                {recentActivity.length === 0 ? (
+                                    <p className="text-sm text-dark-100">Geen recente activiteit.</p>
+                                ) : (
+                                    recentActivity.map((activity, i) => (
+                                        <Link
+                                            key={i}
+                                            href={activity.link}
+                                            className="text-sm text-dark-100 flex items-start gap-2 hover:text-primary transition-colors"
+                                        >
+                                            <span className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 flex-shrink-0"></span>
+                                            <span>{activity.text}</span>
+                                        </Link>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
