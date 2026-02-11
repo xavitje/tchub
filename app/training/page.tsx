@@ -12,28 +12,32 @@ export default function TrainingPage() {
 
     const canAccessAdmin = (session?.user as any)?.customRole?.permissions?.includes('ACCESS_ADMIN') || (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'HQ_ADMIN';
 
-    useEffect(() => {
-        async function fetchCourses() {
-            try {
-                const res = await fetch('/api/training');
-                if (!res.ok) throw new Error('Failed to fetch');
-                const data = await res.json();
+    const [stats, setStats] = useState({ completedCoursesCount: 0, completedCourseIds: [], totalCourses: 0 });
 
-                // Ensure data is an array
-                if (Array.isArray(data)) {
-                    setCourses(data);
-                } else {
-                    console.error('API did not return an array:', data);
-                    setCourses([]);
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const [coursesRes, statsRes] = await Promise.all([
+                    fetch('/api/training'),
+                    fetch('/api/training/stats')
+                ]);
+
+                if (coursesRes.ok) {
+                    const data = await coursesRes.json();
+                    if (Array.isArray(data)) setCourses(data);
+                }
+
+                if (statsRes.ok) {
+                    const data = await statsRes.json();
+                    setStats(data);
                 }
             } catch (error) {
-                console.error('Failed to fetch courses:', error);
-                setCourses([]);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         }
-        fetchCourses();
+        fetchData();
     }, []);
 
     if (loading) {
@@ -79,7 +83,7 @@ export default function TrainingPage() {
                     <button className="card p-4 hover:shadow-medium transition-all text-left">
                         <Award className="w-8 h-8 text-warning mb-2" />
                         <h3 className="font-semibold text-dark">Certificeringen</h3>
-                        <p className="text-sm text-dark-100 mt-1">0 programma's</p>
+                        <p className="text-sm text-dark-100 mt-1">{stats.completedCoursesCount} behaald</p>
                     </button>
                 </div>
 
@@ -107,6 +111,11 @@ export default function TrainingPage() {
                                                         <span className="badge bg-light-200 text-dark-100">
                                                             {course.level}
                                                         </span>
+                                                        {(stats.completedCourseIds as string[]).includes(course.id) && (
+                                                            <span className="badge bg-success/10 text-success flex items-center gap-1">
+                                                                <Award className="w-3 h-3" /> Behaald
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <h3 className="text-lg font-semibold text-dark mb-2">
                                                         {course.title}
@@ -122,10 +131,18 @@ export default function TrainingPage() {
                                                         <span>{course._count?.modules || 0} modules</span>
                                                     </div>
                                                 </div>
-                                                <Link href={`/training/${course.id}`} className="btn btn-primary ml-4 flex items-center gap-2">
-                                                    <Play className="w-4 h-4" />
-                                                    Start
-                                                </Link>
+                                                <div className="flex flex-col gap-2">
+                                                    <Link href={`/training/${course.id}`} className="btn btn-primary ml-4 flex items-center gap-2">
+                                                        <Play className="w-4 h-4" />
+                                                        {(stats.completedCourseIds as string[]).includes(course.id) ? 'Bekijk' : 'Start'}
+                                                    </Link>
+                                                    {(stats.completedCourseIds as string[]).includes(course.id) && (
+                                                        <Link href={`/training/certificate/${course.id}`} className="btn btn-outline ml-4 flex items-center gap-2 text-xs">
+                                                            <Award className="w-3 h-3" />
+                                                            Certificaat
+                                                        </Link>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -140,8 +157,25 @@ export default function TrainingPage() {
                         <div className="card p-6">
                             <h3 className="text-lg font-semibold text-dark mb-4">Mijn Voortgang</h3>
                             <div className="space-y-4 text-center py-4">
-                                <Award className="w-12 h-12 text-primary mx-auto opacity-20 mb-2" />
-                                <p className="text-sm text-dark-100">Start je eerste training om je voortgang hier te zien!</p>
+                                {stats.completedCoursesCount > 0 ? (
+                                    <>
+                                        <Award className="w-12 h-12 text-warning mx-auto mb-2" />
+                                        <p className="text-xl font-bold text-dark">{stats.completedCoursesCount}</p>
+                                        <p className="text-sm text-dark-100">Certificaten behaald</p>
+                                        <div className="w-full bg-light-200 rounded-full h-2 mt-4">
+                                            <div
+                                                className="bg-warning h-2 rounded-full transition-all duration-1000"
+                                                style={{ width: `${Math.min(100, (stats.completedCoursesCount / (stats.totalCourses || 1)) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <p className="text-xs text-dark-100 mt-1">{Math.round((stats.completedCoursesCount / (stats.totalCourses || 1)) * 100)}% van alle trainingen voltooid</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Award className="w-12 h-12 text-primary mx-auto opacity-20 mb-2" />
+                                        <p className="text-sm text-dark-100">Start je eerste training om je voortgang hier te zien!</p>
+                                    </>
+                                )}
                             </div>
                         </div>
 

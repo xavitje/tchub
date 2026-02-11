@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Circle, ChevronRight, ChevronLeft, Award } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, ChevronRight, ChevronLeft, Award, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LessonPage({ params }: { params: { id: string } }) {
@@ -16,6 +16,12 @@ export default function LessonPage({ params }: { params: { id: string } }) {
     const [quizPassed, setQuizPassed] = useState(false);
     const [showError, setShowError] = useState(false);
 
+    // Exam State
+    const [isExam, setIsExam] = useState(false);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [examScore, setExamScore] = useState(0);
+    const [examFinished, setExamFinished] = useState(false);
+
     useEffect(() => {
         fetchLesson();
     }, [params.id]);
@@ -28,7 +34,14 @@ export default function LessonPage({ params }: { params: { id: string } }) {
 
             if (data.quiz) {
                 try {
-                    setQuiz(JSON.parse(data.quiz));
+                    const parsed = JSON.parse(data.quiz);
+                    if (Array.isArray(parsed)) {
+                        setIsExam(true);
+                        setQuiz(parsed);
+                    } else {
+                        setIsExam(false);
+                        setQuiz(parsed);
+                    }
                 } catch (e) {
                     console.error("Failed to parse quiz", e);
                 }
@@ -52,12 +65,36 @@ export default function LessonPage({ params }: { params: { id: string } }) {
     const handleQuizSubmit = () => {
         if (selectedOption === null || !quiz) return;
 
-        if (selectedOption === quiz.correct) {
-            setQuizPassed(true);
-            setShowError(false);
+        if (isExam) {
+            // Exam Logic
+            const currentQ = quiz[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQ.correct;
+
+            if (isCorrect) {
+                setExamScore(prev => prev + 1);
+            }
+
+            const nextIdx = currentQuestionIndex + 1;
+            if (nextIdx < quiz.length) {
+                setCurrentQuestionIndex(nextIdx);
+                setSelectedOption(null);
+            } else {
+                setExamFinished(true);
+                // Require 80% to pass
+                const finalScore = isCorrect ? examScore + 1 : examScore;
+                const passed = (finalScore / quiz.length) >= 0.8;
+                setQuizPassed(passed);
+            }
+
         } else {
-            setShowError(true);
-            setTimeout(() => setShowError(false), 2000);
+            // Single Question Logic
+            if (selectedOption === quiz.correct) {
+                setQuizPassed(true);
+                setShowError(false);
+            } else {
+                setShowError(true);
+                setTimeout(() => setShowError(false), 2000);
+            }
         }
     };
 
@@ -129,14 +166,21 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                                 <div className={`card p-6 border-l-4 ${quizPassed ? 'border-success bg-success/5' : 'border-primary bg-primary/5'} transition-all`}>
                                     <h3 className="flex items-center gap-2 font-bold text-lg mb-4 text-dark">
                                         <Award className={`w-5 h-5 ${quizPassed ? 'text-success' : 'text-primary'}`} />
-                                        Kennis Check
+                                        {isExam ? 'Eindtoets & Certificering' : 'Kennis Check'}
                                     </h3>
 
-                                    {!quizPassed ? (
+                                    {!quizPassed && !examFinished ? (
                                         <div className="space-y-4">
-                                            <p className="font-medium text-dark">{quiz.question}</p>
+                                            {isExam && (
+                                                <div className="flex items-center justify-between text-xs font-bold text-dark-100 uppercase tracking-wider mb-2">
+                                                    <span>Vraag {currentQuestionIndex + 1} van {quiz.length}</span>
+                                                    <span>Score: {examScore}</span>
+                                                </div>
+                                            )}
+
+                                            <p className="font-medium text-dark">{isExam ? quiz[currentQuestionIndex].question : quiz.question}</p>
                                             <div className="space-y-2">
-                                                {quiz.options.map((opt: string, idx: number) => (
+                                                {(isExam ? quiz[currentQuestionIndex].options : quiz.options).map((opt: string, idx: number) => (
                                                     <button
                                                         key={idx}
                                                         onClick={() => setSelectedOption(idx)}
@@ -156,15 +200,44 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                                                     disabled={selectedOption === null}
                                                     className="btn btn-primary ml-auto"
                                                 >
-                                                    Controleer Antwoord
+                                                    {isExam
+                                                        ? (currentQuestionIndex === quiz.length - 1 ? 'Afronden' : 'Volgende Vraag')
+                                                        : 'Controleer Antwoord'}
                                                 </button>
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="text-center py-4 animate-bounce-in">
-                                            <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-2" />
-                                            <p className="font-bold text-success text-lg">Goed gedaan! Je hebt het begrepen.</p>
-                                            <p className="text-sm text-dark-100">Je kunt de les nu afronden.</p>
+                                            {quizPassed ? (
+                                                <>
+                                                    <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-2" />
+                                                    <p className="font-bold text-success text-lg">Gefeliciteerd!</p>
+                                                    <p className="text-sm text-dark-100">
+                                                        {isExam ? `Je hebt de toets gehaald! Score: ${Math.round((examScore + (examFinished && quiz[currentQuestionIndex]?.correct === selectedOption ? 1 : 0)) / quiz.length * 100)}%` : 'Je hebt het begrepen.'}
+                                                    </p>
+                                                    <p className="text-sm text-dark-100 mt-2">Je kunt de les nu afronden.</p>
+                                                </>
+                                            ) : (
+                                                // Failed Exam
+                                                <>
+                                                    <XCircle className="w-12 h-12 text-error mx-auto mb-2" />
+                                                    <p className="font-bold text-error text-lg">Helaas, niet gehaald.</p>
+                                                    <p className="text-sm text-dark-100 mb-4">
+                                                        Je hebt minimaal 80% nodig. Probeer het opnieuw.
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setExamFinished(false);
+                                                            setCurrentQuestionIndex(0);
+                                                            setExamScore(0);
+                                                            setSelectedOption(null);
+                                                        }}
+                                                        className="btn btn-primary"
+                                                    >
+                                                        Probeer Opnieuw
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -181,8 +254,8 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                                     onClick={handleComplete}
                                     disabled={isCompleting || (quiz && !quizPassed)}
                                     className={`btn px-8 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all ${(quiz && !quizPassed)
-                                            ? 'bg-light-400 text-dark-100 cursor-not-allowed opacity-50'
-                                            : 'btn-primary animate-pulse shadow-primary/20'
+                                        ? 'bg-light-400 text-dark-100 cursor-not-allowed opacity-50'
+                                        : 'btn-primary animate-pulse shadow-primary/20'
                                         }`}
                                 >
                                     <CheckCircle2 className="w-5 h-5" />

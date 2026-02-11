@@ -23,7 +23,7 @@ export async function GET() {
                 take: 10,
                 include: {
                     author: true,
-                    poll: { include: { options: true } },
+                    poll: { include: { options: true, votes: true } },
                     event: true,
                     likes: userId ? { where: { userId } } : false,
                 },

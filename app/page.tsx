@@ -5,6 +5,7 @@ import { MessageSquare, Calendar, TrendingUp, Users, Trash2, Plus, X } from 'luc
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useNotification } from '@/components/ui/NotificationSystem';
+import PollInteraction from '@/components/discussions/PollInteraction';
 
 export default function HomePage() {
     const { data: session } = useSession();
@@ -242,10 +243,10 @@ export default function HomePage() {
                                 </div>
                             ) : (
                                 posts.map((post) => (
-                                    <Link
+                                    <div
                                         key={post.id}
-                                        href={`/discussions/${post.id}`}
-                                        className={`block card p-6 hover:shadow-medium transition-all ${post.isPinned ? 'border-2 border-primary' : ''}`}
+                                        className={`block card p-6 hover:shadow-medium transition-all ${post.isPinned ? 'border-2 border-primary' : ''} cursor-pointer`}
+                                        onClick={() => window.location.href = `/discussions/${post.id}`}
                                     >
                                         <div className="flex items-start gap-4">
                                             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
@@ -268,6 +269,14 @@ export default function HomePage() {
                                                 <p className="text-dark-100 mb-4 line-clamp-3">
                                                     {post.content}
                                                 </p>
+
+                                                {/* POLL RENDERING */}
+                                                {post.type === 'POLL' && post.poll && (
+                                                    <div onClick={(e) => e.stopPropagation()} className="mb-4">
+                                                        <PollInteraction postId={post.id} poll={post.poll} />
+                                                    </div>
+                                                )}
+
                                                 <div className="flex items-center gap-4 text-sm text-dark-100">
                                                     <span className="flex items-center gap-1">
                                                         💬 {post.commentCount} reacties
@@ -278,7 +287,7 @@ export default function HomePage() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </Link>
+                                    </div>
                                 ))
                             )}
                         </div>
