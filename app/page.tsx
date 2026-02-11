@@ -19,6 +19,7 @@ export default function HomePage() {
     const [activePolls, setActivePolls] = useState<any[]>([]);
 
     // Quick Links
+    const [hubs, setHubs] = useState<any[]>([]);
     const [quickLinks, setQuickLinks] = useState<any[]>([]);
     const [showAddLink, setShowAddLink] = useState(false);
     const [newLinkTitle, setNewLinkTitle] = useState('');
@@ -35,11 +36,12 @@ export default function HomePage() {
         async function fetchData() {
             try {
                 // Fetch everything else in parallel
-                const [announcementsRes, postsRes, statsRes, quickLinksRes] = await Promise.all([
+                const [announcementsRes, postsRes, statsRes, quickLinksRes, hubsRes] = await Promise.all([
                     fetch('/api/posts?type=ANNOUNCEMENT&limit=5'),
                     fetch('/api/posts?limit=10'),
-                    fetch('/api/stats'),
-                    session?.user?.id ? fetch('/api/quicklinks') : Promise.resolve(new Response('[]'))
+                    fetch(`/api/stats?t=${Date.now()}`),
+                    session?.user?.id ? fetch('/api/quicklinks') : Promise.resolve(new Response('[]')),
+                    fetch(`/api/hubs?t=${Date.now()}`)
                 ]);
 
                 // Process announcements immediately
@@ -69,6 +71,11 @@ export default function HomePage() {
                 if (quickLinksRes.ok) {
                     const linksData = await quickLinksRes.json();
                     setQuickLinks(linksData);
+                }
+
+                if (hubsRes.ok) {
+                    const hubsData = await hubsRes.json();
+                    setHubs(hubsData);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
@@ -366,6 +373,31 @@ export default function HomePage() {
                             <Link href="/polls" className="btn btn-outline w-full mt-4 text-sm">
                                 Bekijk alle polls
                             </Link>
+                        </div>
+
+                        {/* TC Hubs Section */}
+                        <div className="card p-6">
+                            <h3 className="text-lg font-semibold text-dark mb-4 flex items-center gap-2">
+                                <span className="text-xl">🏢</span>
+                                TC Hubs
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {hubs.slice(0, 6).map((hub) => (
+                                    <Link
+                                        key={hub.id}
+                                        href={hub.sharePointUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-light-200 border border-light-400 transition-all text-center group"
+                                    >
+                                        <span className="text-2xl group-hover:scale-110 transition-transform">{hub.icon}</span>
+                                        <span className="text-[10px] font-bold text-dark truncate w-full">{hub.name}</span>
+                                    </Link>
+                                ))}
+                            </div>
+                            {hubs.length === 0 && (
+                                <p className="text-sm text-dark-100">Geen hubs beschikbaar</p>
+                            )}
                         </div>
 
                         {/* Quick Links */}

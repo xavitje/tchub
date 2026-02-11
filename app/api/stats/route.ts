@@ -18,7 +18,10 @@ export async function GET() {
             }),
             prisma.poll.count({
                 where: {
-                    endsAt: { gte: new Date() }
+                    OR: [
+                        { endsAt: null },
+                        { endsAt: { gte: new Date() } }
+                    ]
                 }
             }),
             prisma.user.count()
