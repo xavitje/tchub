@@ -24,7 +24,15 @@ export async function GET() {
             });
         }
 
-        return NextResponse.json(settings);
+        // Convert string back to array for frontend
+        const formattedSettings = {
+            ...settings,
+            headerOrder: typeof settings.headerOrder === 'string'
+                ? JSON.parse(settings.headerOrder)
+                : settings.headerOrder
+        };
+
+        return NextResponse.json(formattedSettings);
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -42,24 +50,35 @@ export async function PATCH(request: Request) {
         const body = await request.json();
         const { theme, headerOrder, emailNotifications, pushNotifications } = body;
 
+        // Convert array to string for SQLite storage
+        const headerOrderString = Array.isArray(headerOrder) ? JSON.stringify(headerOrder) : headerOrder;
+
         const settings = await prisma.userSettings.upsert({
             where: { userId: session.user.id },
             update: {
                 ...(theme && { theme }),
-                ...(headerOrder && { headerOrder }),
+                ...(headerOrder && { headerOrder: headerOrderString }),
                 ...(emailNotifications !== undefined && { emailNotifications }),
                 ...(pushNotifications !== undefined && { pushNotifications })
             },
             create: {
                 userId: session.user.id,
                 theme: theme || 'SYSTEM',
-                headerOrder: headerOrder || ['home', 'discussions', 'training', 'hubs', 'support'],
+                headerOrder: headerOrderString || JSON.stringify(['home', 'discussions', 'training', 'hubs', 'support']),
                 emailNotifications: emailNotifications !== undefined ? emailNotifications : true,
                 pushNotifications: pushNotifications !== undefined ? pushNotifications : true
             }
         });
 
-        return NextResponse.json(settings);
+        // Convert back for response
+        const formattedSettings = {
+            ...settings,
+            headerOrder: typeof settings.headerOrder === 'string'
+                ? JSON.parse(settings.headerOrder)
+                : settings.headerOrder
+        };
+
+        return NextResponse.json(formattedSettings);
     } catch (error) {
         console.error('Error updating settings:', error);
         return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
