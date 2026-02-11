@@ -35,47 +35,26 @@ export default function HomePage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                // Fetch everything else in parallel
-                const [announcementsRes, postsRes, statsRes, quickLinksRes, hubsRes] = await Promise.all([
-                    fetch('/api/posts?type=ANNOUNCEMENT&limit=5'),
-                    fetch('/api/posts?limit=10'),
-                    fetch(`/api/stats?t=${Date.now()}`),
-                    session?.user?.id ? fetch('/api/quicklinks') : Promise.resolve(new Response('[]')),
-                    fetch(`/api/hubs?t=${Date.now()}`)
-                ]);
+                // Fetch all data in one request for maximum performance
+                const res = await fetch(`/api/home-data?t=${Date.now()}`);
 
-                // Process announcements immediately
-                if (announcementsRes.ok) {
-                    const announcementsData = await announcementsRes.json();
-                    setAnnouncements(announcementsData);
-                }
+                if (res.ok) {
+                    const data = await res.json();
 
-                if (postsRes.ok) {
-                    const postsData = await postsRes.json();
-                    const nonAnnouncements = postsData.filter((p: any) => p.type !== 'ANNOUNCEMENT');
-                    setPosts(nonAnnouncements);
+                    if (data.announcements) setAnnouncements(data.announcements);
 
-                    // Get events and polls
-                    const events = nonAnnouncements.filter((p: any) => p.type === 'EVENT').slice(0, 5);
-                    setUpcomingEvents(events);
+                    if (data.posts) {
+                        const nonAnnouncements = data.posts.filter((p: any) => p.type !== 'ANNOUNCEMENT');
+                        setPosts(nonAnnouncements);
 
-                    const polls = nonAnnouncements.filter((p: any) => p.type === 'POLL').slice(0, 3);
-                    setActivePolls(polls);
-                }
+                        // Get events and polls
+                        setUpcomingEvents(nonAnnouncements.filter((p: any) => p.type === 'EVENT').slice(0, 5));
+                        setActivePolls(nonAnnouncements.filter((p: any) => p.type === 'POLL').slice(0, 3));
+                    }
 
-                if (statsRes.ok) {
-                    const statsData = await statsRes.json();
-                    setStats(statsData);
-                }
-
-                if (quickLinksRes.ok) {
-                    const linksData = await quickLinksRes.json();
-                    setQuickLinks(linksData);
-                }
-
-                if (hubsRes.ok) {
-                    const hubsData = await hubsRes.json();
-                    setHubs(hubsData);
+                    if (data.stats) setStats(data.stats);
+                    if (data.quickLinks) setQuickLinks(data.quickLinks);
+                    if (data.hubs) setHubs(data.hubs);
                 }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
