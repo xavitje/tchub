@@ -21,14 +21,14 @@ export async function GET() {
                 }
             },
             orderBy: { name: 'asc' }
-        }).catch(err => {
+        }).catch((err: any) => {
             console.error('Prisma Error (findMany roles):', err);
             return [];
         });
 
-        const formattedRoles = roles.map(role => ({
+        const formattedRoles = roles.map((role: any) => ({
             ...role,
-            permissionIds: role.permissions.map(p => p.id)
+            permissionIds: role.permissions.map((p: any) => p.id)
         }));
 
         return NextResponse.json(formattedRoles);
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
         const formattedRole = {
             ...role,
-            permissionIds: role.permissions.map(p => p.id)
+            permissionIds: role.permissions.map((p: any) => p.id)
         };
 
         return NextResponse.json(formattedRole);

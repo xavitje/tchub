@@ -32,7 +32,7 @@ export async function PATCH(
 
         const formattedRole = {
             ...role,
-            permissionIds: role.permissions.map(p => p.id)
+            permissionIds: role.permissions.map((p: any) => p.id)
         };
 
         return NextResponse.json(formattedRole);

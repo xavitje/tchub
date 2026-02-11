@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             include: { customRole: { include: { permissions: true } } }
         });
 
-        const hasPermission = user?.customRole?.permissions.some(p => p.name === 'MANAGE_HUBS') ||
+        const hasPermission = user?.customRole?.permissions.some((p: any) => p.name === 'MANAGE_HUBS') ||
             user?.role === 'ADMIN' ||
             user?.role === 'HQ_ADMIN';
 
@@ -52,7 +52,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             include: { customRole: { include: { permissions: true } } }
         });
 
-        const hasPermission = user?.customRole?.permissions.some(p => p.name === 'MANAGE_HUBS') ||
+        const hasPermission = user?.customRole?.permissions.some((p: any) => p.name === 'MANAGE_HUBS') ||
             user?.role === 'ADMIN' ||
             user?.role === 'HQ_ADMIN';
 

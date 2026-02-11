@@ -89,7 +89,7 @@ export async function POST(request: Request) {
                 name: isGroup ? name : undefined,
                 lastMessageAt: new Date(),
                 users: {
-                    connect: allUserIds.map(id => ({ id }))
+                    connect: allUserIds.map((id: string) => ({ id }))
                 }
             }
         });

@@ -16,7 +16,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        const hasAdminPermission = user.customRole?.permissions.some(p => p.name === 'ACCESS_ADMIN');
+        const hasAdminPermission = user.customRole?.permissions.some((p: any) => p.name === 'ACCESS_ADMIN');
         if (!hasAdminPermission && user.role !== 'ADMIN' && user.role !== 'HQ_ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -71,7 +71,7 @@ export async function DELETE(
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        const hasAdminPermission = user.customRole?.permissions.some(p => p.name === 'ACCESS_ADMIN');
+        const hasAdminPermission = user.customRole?.permissions.some((p: any) => p.name === 'ACCESS_ADMIN');
         if (!hasAdminPermission && user.role !== 'ADMIN' && user.role !== 'HQ_ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }

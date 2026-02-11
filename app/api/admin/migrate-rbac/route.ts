@@ -39,7 +39,7 @@ export async function POST(request: Request) {
             permissions.push(permission);
         }
 
-        const getPermId = (name: string) => permissions.find(p => p.name === name)?.id || '';
+        const getPermId = (name: string) => permissions.find((p: any) => p.name === name)?.id || '';
 
         // 2. Create Roles
         const roles = [
@@ -56,12 +56,12 @@ export async function POST(request: Request) {
             {
                 name: 'Admin',
                 description: 'Full administrator',
-                permissionIds: permissions.filter(p => p.name !== 'MANAGE_ROLES').map(p => p.id)
+                permissionIds: permissions.filter((p: any) => p.name !== 'MANAGE_ROLES').map((p: any) => p.id)
             },
             {
                 name: 'HQ_Admin',
                 description: 'Global administrator with role management',
-                permissionIds: permissions.map(p => p.id)
+                permissionIds: permissions.map((p: any) => p.id)
             }
         ];
 
@@ -72,14 +72,14 @@ export async function POST(request: Request) {
                 update: {
                     description: r.description,
                     permissions: {
-                        set: r.permissionIds.map(id => ({ id }))
+                        set: r.permissionIds.map((id: string) => ({ id }))
                     }
                 },
                 create: {
                     name: r.name,
                     description: r.description,
                     permissions: {
-                        connect: r.permissionIds.map(id => ({ id }))
+                        connect: r.permissionIds.map((id: string) => ({ id }))
                     }
                 }
             });
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
             else if (user.role === 'ADMIN') targetRoleName = 'Admin';
             else if (user.role === 'MANAGER') targetRoleName = 'Manager';
 
-            const targetRole = dbRoles.find(r => r.name === targetRoleName);
+            const targetRole = dbRoles.find((r: any) => r.name === targetRoleName);
             if (targetRole) {
                 await prisma.user.update({
                     where: { id: user.id },

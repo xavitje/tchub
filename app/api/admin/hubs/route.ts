@@ -14,7 +14,7 @@ export async function GET() {
             include: { customRole: { include: { permissions: true } } }
         });
 
-        const hasPermission = user?.customRole?.permissions.some(p => p.name === 'MANAGE_HUBS') ||
+        const hasPermission = user?.customRole?.permissions.some((p: any) => p.name === 'MANAGE_HUBS') ||
             user?.role === 'ADMIN' ||
             user?.role === 'HQ_ADMIN';
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
             include: { customRole: { include: { permissions: true } } }
         });
 
-        const hasPermission = user?.customRole?.permissions.some(p => p.name === 'MANAGE_HUBS') ||
+        const hasPermission = user?.customRole?.permissions.some((p: any) => p.name === 'MANAGE_HUBS') ||
             user?.role === 'ADMIN' ||
             user?.role === 'HQ_ADMIN';
 

@@ -65,7 +65,7 @@ export async function GET(
         });
 
         // Manual fetch to bypass potential Prisma client sync issues
-        const userIds = typingUsers.map(t => t.userId);
+        const userIds = typingUsers.map((t: any) => t.userId);
         const users = await prisma.user.findMany({
             where: { id: { in: userIds } },
             select: {
@@ -75,8 +75,8 @@ export async function GET(
             }
         });
 
-        const typingUsersWithDetails = typingUsers.map(t => {
-            const user = users.find(u => u.id === t.userId);
+        const typingUsersWithDetails = typingUsers.map((t: any) => {
+            const user = users.find((u: any) => u.id === t.userId);
             return {
                 ...t,
                 user
