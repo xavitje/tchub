@@ -15,19 +15,23 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const query = searchParams.get('q');
 
-        if (!query || query.length < 2) {
+        if (!query || query.trim().length < 2) {
             return NextResponse.json([]);
         }
+
+        const normalizedQuery = query.trim();
+        console.log(`Searching users with query: "${normalizedQuery}" for user: ${session.user.id}`);
 
         const users = await prisma.user.findMany({
             where: {
                 OR: [
-                    { displayName: { contains: query, mode: 'insensitive' } },
-                    { email: { contains: query, mode: 'insensitive' } }
+                    { displayName: { contains: normalizedQuery } },
+                    { email: { contains: normalizedQuery } }
                 ],
                 NOT: {
                     id: session.user.id // Exclude self
-                }
+                },
+                isActive: true
             },
             select: {
                 id: true,
@@ -36,8 +40,10 @@ export async function GET(request: Request) {
                 profileImage: true,
                 jobTitle: true
             },
-            take: 10
+            take: 20
         });
+
+        console.log(`Found ${users.length} users for query: "${normalizedQuery}"`);
 
         return NextResponse.json(users);
     } catch (error) {

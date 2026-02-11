@@ -7,6 +7,7 @@ import { Search, Bell, User, LogOut, Settings, MessageSquare, Menu, X, Home, Shi
 import { TCHubsMenu } from './TCHubsMenu';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
+import { GlobalSearch } from './GlobalSearch';
 import { useState, useRef } from 'react';
 import { useSettings } from '../providers/SettingsProvider';
 
@@ -113,27 +114,11 @@ export function Navbar() {
                                 </Link>
                             );
                         })}
+                    </div>
 
-                        {/* Extra items that might not be in the order but we still want to show (optional) */}
-                        {NAV_ITEMS.filter(item =>
-                            !['Home', 'Discussies', 'Training', 'Support Portal'].includes(item.name)
-                        ).map(item => {
-                            const isActive = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={cn(
-                                        "px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
-                                        isActive
-                                            ? "text-primary border-b-2 border-primary"
-                                            : "text-dark-100 hover:text-primary"
-                                    )}
-                                >
-                                    {item.name}
-                                </Link>
-                            );
-                        })}
+                    {/* Global Search - New Placement */}
+                    <div className="hidden md:flex flex-1 max-w-sm mx-4">
+                        <GlobalSearch />
                     </div>
 
                     {/* Right Side Actions */}

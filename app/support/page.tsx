@@ -6,16 +6,9 @@ export default function SupportPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <h1 className="text-3xl font-bold text-dark mb-6">Support Portal</h1>
 
-                {/* Search Bar */}
-                <div className="card p-6 mb-8">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-100" />
-                        <input
-                            type="text"
-                            placeholder="Zoek in de kennisbank..."
-                            className="input pl-12"
-                        />
-                    </div>
+                {/* Header Section */}
+                <div className="mb-8">
+                    <p className="text-dark-100">Hoe kunnen we je vandaag helpen?</p>
                 </div>
 
                 {/* Quick Actions */}
@@ -110,8 +103,8 @@ export default function SupportPage() {
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-sm font-mono text-dark-100">{ticket.id}</span>
                                                 <span className={`badge ${ticket.status === 'Open'
-                                                        ? 'bg-warning/20 text-warning'
-                                                        : 'bg-success/20 text-success'
+                                                    ? 'bg-warning/20 text-warning'
+                                                    : 'bg-success/20 text-success'
                                                     }`}>
                                                     {ticket.status}
                                                 </span>
