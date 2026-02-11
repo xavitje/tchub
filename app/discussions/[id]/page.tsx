@@ -6,6 +6,8 @@ import { ArrowLeft, MessageSquare, ThumbsUp, Bookmark, Share2, MoreVertical } fr
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useNotification } from '@/components/ui/NotificationSystem';
+import PollInteraction from '@/components/discussions/PollInteraction';
+import EventInteraction from '@/components/discussions/EventInteraction';
 
 export default function PostDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -203,6 +205,15 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                     <div className="prose max-w-none mb-6">
                         <p className="text-dark-100 whitespace-pre-line">{post.content}</p>
                     </div>
+
+                    {/* Interactive Content (Poll or Event) */}
+                    {post.type === 'POLL' && post.poll && (
+                        <PollInteraction postId={post.id} poll={post.poll} />
+                    )}
+
+                    {post.type === 'EVENT' && post.event && (
+                        <EventInteraction postId={post.id} event={post.event} />
+                    )}
 
                     <div className="flex items-center gap-6 text-sm text-dark-100 mb-6 pb-6 border-b border-light-400">
                         <span>{post.viewCount} weergaven</span>

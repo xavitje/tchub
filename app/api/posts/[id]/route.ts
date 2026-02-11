@@ -18,10 +18,17 @@ export async function GET(
                 author: true,
                 poll: {
                     include: {
-                        options: true,
+                        options: {
+                            orderBy: { order: 'asc' }
+                        },
+                        votes: true,
                     },
                 },
-                event: true,
+                event: {
+                    include: {
+                        registrations: true,
+                    },
+                },
                 likes: userId ? {
                     where: { userId: userId }
                 } : false,
