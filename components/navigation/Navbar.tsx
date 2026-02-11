@@ -47,16 +47,6 @@ export function Navbar() {
         <nav className="sticky top-0 z-40 bg-white border-b border-light-400 shadow-soft">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Hamburger Menu (Mobile Only) */}
-                    <div className="flex lg:hidden">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 -ml-2 text-dark-100 hover:text-primary transition-colors"
-                            aria-label="Open menu"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </button>
-                    </div>
 
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
@@ -114,21 +104,39 @@ export function Navbar() {
                                 </Link>
                             );
                         })}
+
+                        {/* Extra items (Phenix, Ideas, etc) */}
+                        {NAV_ITEMS.filter(item =>
+                            !['Home', 'Discussies', 'Training', 'Support Portal'].includes(item.name)
+                        ).map(item => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    target={item.external ? "_blank" : undefined}
+                                    rel={item.external ? "noopener noreferrer" : undefined}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
+                                        isActive
+                                            ? "text-primary border-b-2 border-primary"
+                                            : "text-dark-100 hover:text-primary"
+                                    )}
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
                     </div>
 
-                    {/* Global Search - New Placement */}
-                    <div className="hidden md:flex flex-1 max-w-sm mx-4">
-                        <GlobalSearch />
-                    </div>
-
-                    {/* Right Side Actions */}
+                    {/* Desktop/Mobile Actions */}
                     <div className="flex items-center gap-2">
                         {session ? (
                             <>
-                                {/* Chat */}
+                                {/* Chat - Desktop */}
                                 <Link
                                     href="/chat"
-                                    className="p-2 text-dark-100 hover:text-primary hover:bg-light-200 rounded-lg transition-all duration-200"
+                                    className="hidden sm:block p-2 text-dark-100 hover:text-primary hover:bg-light-200 rounded-lg transition-all duration-200"
                                     aria-label="Chat"
                                 >
                                     <MessageSquare className="w-5 h-5" />
@@ -137,7 +145,7 @@ export function Navbar() {
                                 {/* Notifications */}
                                 <NotificationDropdown />
 
-                                {/* User Profile Menu */}
+                                {/* User Menu */}
                                 <div
                                     className="relative"
                                     onMouseEnter={handleMouseEnter}
@@ -208,6 +216,26 @@ export function Navbar() {
                                 Inloggen
                             </button>
                         )}
+
+                        {/* Mobile Hamburger - Always visible on small screens */}
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="lg:hidden p-2 text-dark-100 hover:text-primary transition-colors"
+                            aria-label="Open menu"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sub-bar for Search */}
+            <div className="bg-light-100 border-b border-light-400 py-2">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-center md:justify-start">
+                        <div className="w-full max-w-2xl">
+                            <GlobalSearch />
+                        </div>
                     </div>
                 </div>
             </div>
