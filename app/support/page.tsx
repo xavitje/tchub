@@ -51,7 +51,7 @@ export default function SupportPage() {
                         <LifeBuoy className="w-8 h-8 text-primary" />
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-dark mb-4">
-                        Hoe kunnen we je helpen, {session?.user?.firstName || 'collega'}?
+                        Hoe kunnen we je helpen, {session?.user?.name?.split(' ')[0] || 'collega'}?
                     </h1>
                     <p className="text-lg text-dark-100 max-w-2xl mx-auto mb-8">
                         Doorzoek onze kennisbank of neem contact op met support.
