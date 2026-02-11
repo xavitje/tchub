@@ -492,6 +492,7 @@ model TrainingLesson {
   title         String
   content       String?   // Rich text content
   videoUrl      String?
+  quiz          String?   // JSON string of quiz data: { question: string, options: string[], correct: number }
   order         Int       @default(0)
   duration      Int?      // Minutes
   createdAt     DateTime  @default(now())

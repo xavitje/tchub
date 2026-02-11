@@ -21,6 +21,11 @@ const MODULES_CONTENT = [
         lessons: [
             {
                 title: 'Introductie tot Teams',
+                quiz: JSON.stringify({
+                    question: "Wat is de sneltoets om alle sneltoetsen in Teams te zien?",
+                    options: ["Ctrl + C", "Ctrl + .", "Alt + T", "Windows + X"],
+                    correct: 1
+                }),
                 content: `
 ### Welkom bij Microsoft Teams!
 
@@ -44,6 +49,11 @@ Neem even de tijd om rond te klikken en vertrouwd te raken met de indeling.
             },
             {
                 title: 'Effectief Chatten en Bestanden Delen',
+                quiz: JSON.stringify({
+                    question: "Waar vind je een bestand terug nadat je het in een chat hebt gedeeld?",
+                    options: ["Alleen in je mail", "In het tabblad 'Bestanden' bovenaan de chat", "Op je bureaublad", "In de Prullenbak"],
+                    correct: 1
+                }),
                 content: `
 ### Chatten als een Pro
 
@@ -65,6 +75,11 @@ Zodra een bestand gedeeld is, staat het in het tabblad **Bestanden** bovenaan de
             },
             {
                 title: 'Vergaderen als een Pro',
+                quiz: JSON.stringify({
+                    question: "Wat kun je doen als je iets wilt zeggen zonder de spreker te onderbreken?",
+                    options: ["Hard roepen", "De Hand opsteken functie gebruiken", "Je scherm delen", "De vergadering verlaten"],
+                    correct: 1
+                }),
                 content: `
 ### Online Vergaderingen
 
@@ -92,6 +107,11 @@ Oefening baart kunst! Plan een testvergadering met een collega om deze functies 
         lessons: [
             {
                 title: 'Documenten Opzetten en Stylen',
+                quiz: JSON.stringify({
+                    question: "Waarom zou je Stijlen (Styles) gebruiken in Word?",
+                    options: ["Het is verplicht door Microsoft", "Voor consistentie en automatische inhoudsopgaven", "Om de tekst onleesbaar te maken", "Het maakt bestanden kleiner"],
+                    correct: 1
+                }),
                 content: `
 ### Professionele Documenten
 Een goed document is niet alleen inhoudelijk sterk, maar ziet er ook verzorgd uit. Word biedt krachtige tools om dit consistent te doen.
@@ -112,6 +132,11 @@ Investeer 5 minuten in het leren van stijlen, en bespaar uren prutsen met opmaak
             },
             {
                 title: 'Samenwerken aan Documenten',
+                quiz: JSON.stringify({
+                    question: "Wat zie je als een collega in hetzelfde document werkt?",
+                    options: ["Een foutmelding", "Een gekleurd vlaggetje met hun naam", "Het document sluit af", "Niets, het is onzichtbaar"],
+                    correct: 1
+                }),
                 content: `
 ### Co-Authoring: Tegelijk Werken
 
@@ -136,6 +161,11 @@ Zodra je collega het document opent, zie je een gekleurd vlaggetje in de tekst m
         lessons: [
             {
                 title: 'Basis Formules en Functies',
+                quiz: JSON.stringify({
+                    question: "Waarmee begint elke formule in Excel?",
+                    options: ["Met een punt", "Met DE", "Met een = teken", "Met een getal"],
+                    correct: 2
+                }),
                 content: `
 ### Excel: Je Rekenvriend
 
@@ -155,6 +185,11 @@ Excel kan intimiderend lijken, maar met een paar basisfuncties kom je al heel ve
             },
             {
                 title: 'Draaitabellen (Pivot Tables) Introductie',
+                quiz: JSON.stringify({
+                    question: "Wat is het grootste voordeel van een Draaitabel?",
+                    options: ["Het maakt data groen", "Je kunt razendsnel data samenvatten en analyseren", "Het wist je data", "Het werkt alleen in Word"],
+                    correct: 1
+                }),
                 content: `
 ### Draaitabellen: Toveren met Data
 
@@ -180,6 +215,11 @@ Het mooie van draaitabellen is dat je niets kapot kunt maken. Sleep velden heen 
         lessons: [
             {
                 title: 'Document Bibliotheken Beheren',
+                quiz: JSON.stringify({
+                    question: "Wat is een 'Document Bibliotheek' in SharePoint?",
+                    options: ["Een plek om boeken te lenen", "Een map met bestanden", "Een virusscanner", "Een soort vergadering"],
+                    correct: 1
+                }),
                 content: `
 ### SharePoint vs. OneDrive
 
@@ -196,6 +236,11 @@ Tip: Probeer **niet te veel mappen in mappen in mappen** te maken. Gebruik lieve
             },
             {
                 title: 'Sneltoetsen en Zoeken',
+                quiz: JSON.stringify({
+                    question: "Waar zoekt SharePoint in?",
+                    options: ["Alleen bestandsnamen", "Alleen in de Prullenbak", "In bestandsnamen én de inhoud van documenten", "Alleen in afbeeldingen"],
+                    correct: 2
+                }),
                 content: `
 ### Zoeken als een Detective
 
@@ -259,7 +304,10 @@ async function main() {
                 console.log(`    Updating Lesson: ${lesson.title}`);
                 await prisma.trainingLesson.update({
                     where: { id: lesson.id },
-                    data: { content: lessonData.content.trim() }
+                    data: {
+                        content: lessonData.content.trim(),
+                        quiz: lessonData.quiz
+                    }
                 });
             } else {
                 console.log(`    Lesson not found: ${lessonData.title}`);
