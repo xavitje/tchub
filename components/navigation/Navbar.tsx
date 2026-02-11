@@ -19,6 +19,7 @@ const NAV_ITEMS = [
     { name: 'Training', href: '/training' },
     { name: 'Support Portal', href: '/support' },
     { name: 'Ideas Portal', href: '/ideas' },
+    { name: 'Opgeslagen', href: '/saved' },
 ];
 
 export function Navbar() {

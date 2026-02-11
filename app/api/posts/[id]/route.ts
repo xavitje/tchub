@@ -16,19 +16,14 @@ export async function GET(
             where: { id: params.id },
             include: {
                 author: true,
-                poll: {
-                    include: {
-                        options: {
-                            orderBy: { order: 'asc' }
-                        },
-                        votes: true,
-                    },
-                },
                 event: {
                     include: {
                         registrations: true,
                     },
                 },
+                favorites: userId ? {
+                    where: { userId: userId }
+                } : false,
                 likes: userId ? {
                     where: { userId: userId }
                 } : false,
@@ -58,7 +53,9 @@ export async function GET(
         const postWithLikeStatus = {
             ...post,
             likedByMe: userId ? post.likes.length > 0 : false,
+            isFavorited: userId ? post.favorites.length > 0 : false,
             likes: undefined,
+            favorites: undefined,
         };
 
         return NextResponse.json(postWithLikeStatus);

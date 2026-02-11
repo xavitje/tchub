@@ -61,6 +61,31 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
         }
     };
 
+    const handleFavorite = async () => {
+        if (!session?.user?.id) {
+            showNotification('error', 'Je moet ingelogd zijn om op te slaan');
+            return;
+        }
+
+        const isFavorited = post.isFavorited;
+        setPost({
+            ...post,
+            isFavorited: !isFavorited
+        });
+
+        try {
+            const res = await fetch(`/api/posts/${post.id}/favorite`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to toggle favorite');
+            showNotification('success', isFavorited ? 'Verwijderd uit opgeslagen items' : 'Opgeslagen!');
+        } catch (error) {
+            setPost({
+                ...post,
+                isFavorited: isFavorited
+            });
+            showNotification('error', 'Kon niet opslaan');
+        }
+    };
+
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!session?.user?.id) {
@@ -235,9 +260,12 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                             <MessageSquare className="w-4 h-4" />
                             Reageer
                         </button>
-                        <button className="btn btn-outline flex items-center gap-2">
-                            <Bookmark className="w-4 h-4" />
-                            Opslaan
+                        <button
+                            onClick={handleFavorite}
+                            className={`btn ${post.isFavorited ? 'btn-primary' : 'btn-outline'} flex items-center gap-2 transition-all`}
+                        >
+                            <Bookmark className={`w-4 h-4 ${post.isFavorited ? 'fill-current' : ''}`} />
+                            {post.isFavorited ? 'Opgeslagen' : 'Opslaan'}
                         </button>
                     </div>
                 </div>

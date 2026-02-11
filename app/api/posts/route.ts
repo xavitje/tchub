@@ -13,11 +13,15 @@ export async function GET(request: Request) {
 
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
+        const filter = searchParams.get('filter');
 
         const posts = await prisma.post.findMany({
             where: {
                 type: type ? (type as any) : undefined,
                 isPinned: isPinned === 'true' ? true : undefined,
+                favorites: filter === 'favorites' && userId ? {
+                    some: { userId: userId }
+                } : undefined,
             },
             take: limit ? parseInt(limit) : undefined,
             include: {
@@ -31,6 +35,9 @@ export async function GET(request: Request) {
                 likes: userId ? {
                     where: { userId: userId }
                 } : false,
+                favorites: userId ? {
+                    where: { userId: userId }
+                } : false,
             },
             orderBy: [
                 { isPinned: 'desc' },
@@ -38,13 +45,15 @@ export async function GET(request: Request) {
             ],
         });
 
-        const postsWithLikeStatus = posts.map((post: any) => ({
+        const postsWithStatus = posts.map((post: any) => ({
             ...post,
             likedByMe: userId ? post.likes.length > 0 : false,
+            isFavorited: userId ? post.favorites.length > 0 : false,
             likes: undefined,
+            favorites: undefined,
         }));
 
-        return NextResponse.json(postsWithLikeStatus);
+        return NextResponse.json(postsWithStatus);
     } catch (error) {
         console.error('Error fetching posts:', error);
         return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
