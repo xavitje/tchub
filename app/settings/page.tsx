@@ -4,21 +4,15 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Moon, Sun, Monitor, Save, GripVertical } from 'lucide-react';
 import { useNotification } from '@/components/ui/NotificationSystem';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 export default function SettingsPage() {
     const { data: session, status } = useSession();
     const { showNotification } = useNotification();
+    const { theme, headerOrder, updateTheme, updateHeaderOrder } = useSettings();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    const [theme, setTheme] = useState<'LIGHT' | 'DARK' | 'SYSTEM'>('SYSTEM');
-    const [headerOrder, setHeaderOrder] = useState<string[]>([
-        'home',
-        'discussions',
-        'training',
-        'hubs',
-        'support'
-    ]);
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [pushNotifications, setPushNotifications] = useState(true);
 
@@ -33,8 +27,8 @@ export default function SettingsPage() {
             const res = await fetch('/api/settings');
             if (res.ok) {
                 const data = await res.json();
-                setTheme(data.theme);
-                setHeaderOrder(data.headerOrder);
+                updateTheme(data.theme);
+                updateHeaderOrder(data.headerOrder);
                 setEmailNotifications(data.emailNotifications);
                 setPushNotifications(data.pushNotifications);
             }
@@ -90,7 +84,7 @@ export default function SettingsPage() {
         const newOrder = [...headerOrder];
         const [removed] = newOrder.splice(dragIndex, 1);
         newOrder.splice(dropIndex, 0, removed);
-        setHeaderOrder(newOrder);
+        updateHeaderOrder(newOrder);
     };
 
     const getItemLabel = (item: string) => {
@@ -133,10 +127,10 @@ export default function SettingsPage() {
                         <h2 className="text-xl font-semibold text-dark mb-4">Thema</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <button
-                                onClick={() => setTheme('LIGHT')}
+                                onClick={() => updateTheme('LIGHT')}
                                 className={`p-4 rounded-lg border-2 transition-all ${theme === 'LIGHT'
-                                        ? 'border-primary bg-primary-50'
-                                        : 'border-light-400 hover:border-primary-200'
+                                    ? 'border-primary bg-primary-50'
+                                    : 'border-light-400 hover:border-primary-200'
                                     }`}
                             >
                                 <Sun className={`w-8 h-8 mx-auto mb-2 ${theme === 'LIGHT' ? 'text-primary' : 'text-dark-100'}`} />
@@ -144,10 +138,10 @@ export default function SettingsPage() {
                             </button>
 
                             <button
-                                onClick={() => setTheme('DARK')}
+                                onClick={() => updateTheme('DARK')}
                                 className={`p-4 rounded-lg border-2 transition-all ${theme === 'DARK'
-                                        ? 'border-primary bg-primary-50'
-                                        : 'border-light-400 hover:border-primary-200'
+                                    ? 'border-primary bg-primary-50'
+                                    : 'border-light-400 hover:border-primary-200'
                                     }`}
                             >
                                 <Moon className={`w-8 h-8 mx-auto mb-2 ${theme === 'DARK' ? 'text-primary' : 'text-dark-100'}`} />
@@ -155,10 +149,10 @@ export default function SettingsPage() {
                             </button>
 
                             <button
-                                onClick={() => setTheme('SYSTEM')}
+                                onClick={() => updateTheme('SYSTEM')}
                                 className={`p-4 rounded-lg border-2 transition-all ${theme === 'SYSTEM'
-                                        ? 'border-primary bg-primary-50'
-                                        : 'border-light-400 hover:border-primary-200'
+                                    ? 'border-primary bg-primary-50'
+                                    : 'border-light-400 hover:border-primary-200'
                                     }`}
                             >
                                 <Monitor className={`w-8 h-8 mx-auto mb-2 ${theme === 'SYSTEM' ? 'text-primary' : 'text-dark-100'}`} />

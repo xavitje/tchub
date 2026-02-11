@@ -3,45 +3,76 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-dark-300/10;
-  }
-  
-  body {
-    @apply bg-light text-dark-300 antialiased;
+  :root {
+    --bg-color: #F9FAFB;
+    --card-bg: #FFFFFF;
+    --text-color: #1F2937;
+    --text-muted: #4B5563;
+    --border-color: rgba(229, 231, 235, 0.1);
+    --input-bg: #FFFFFF;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-dark;
+  .dark {
+    --bg-color: #111827;
+    --card-bg: #1F2937;
+    --text-color: #F3F4F6;
+    --text-muted: #9CA3AF;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --input-bg: #111827;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    @apply antialiased;
+  }
+
+  * {
+    border-color: var(--border-color);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--text-color);
+    @apply font-semibold;
   }
 }
 
 @layer components {
+
   /* Button Styles */
   .btn {
     @apply px-4 py-2 rounded-md font-medium transition-all duration-200 inline-flex items-center justify-center gap-2;
   }
-  
+
   .btn-primary {
     @apply bg-primary text-white hover:bg-primary-700 active:bg-primary-900 shadow-soft hover:shadow-medium;
   }
-  
+
   .btn-secondary {
     @apply bg-light-300 text-dark hover:bg-light-400 active:bg-light-400;
   }
-  
+
   .btn-outline {
     @apply border-2 border-primary text-primary hover:bg-primary hover:text-white;
   }
 
   /* Card Styles */
   .card {
-    @apply bg-white rounded-lg shadow-soft hover:shadow-medium transition-shadow duration-200;
+    background-color: var(--card-bg);
+    @apply rounded-lg shadow-soft hover:shadow-medium transition-shadow duration-200;
   }
 
   /* Input Styles */
   .input {
-    @apply w-full px-4 py-2 rounded-md border border-light-400 bg-white text-dark placeholder:text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    @apply w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all;
   }
 
   /* Badge Styles */

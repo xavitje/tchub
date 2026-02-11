@@ -8,6 +8,7 @@ import { TCHubsMenu } from './TCHubsMenu';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
 import { useState, useRef } from 'react';
+import { useSettings } from '../providers/SettingsProvider';
 
 const NAV_ITEMS = [
     { name: 'Home', href: '/' },
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
 ];
 
 export function Navbar() {
+    const { headerOrder } = useSettings();
     const pathname = usePathname();
     const { data: session, status } = useSession();
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -67,7 +69,19 @@ export function Navbar() {
 
                     {/* Main Navigation */}
                     <div className="hidden lg:flex items-center gap-1">
-                        {NAV_ITEMS.map((item) => {
+                        {headerOrder.map((key) => {
+                            if (key === 'hubs') return <TCHubsMenu key="hubs" />;
+
+                            const item = NAV_ITEMS.find(i => {
+                                if (key === 'home') return i.name === 'Home';
+                                if (key === 'discussions') return i.name === 'Discussies';
+                                if (key === 'training') return i.name === 'Training';
+                                if (key === 'support') return i.name === 'Support Portal';
+                                return false;
+                            });
+
+                            if (!item) return null;
+
                             const isActive = pathname === item.href;
 
                             if (item.external) {
@@ -89,7 +103,7 @@ export function Navbar() {
                                     key={item.name}
                                     href={item.href}
                                     className={cn(
-                                        "px-4 py-2 text-sm font-medium transition-colors duration-200",
+                                        "px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
                                         isActive
                                             ? "text-primary border-b-2 border-primary"
                                             : "text-dark-100 hover:text-primary"
@@ -100,8 +114,26 @@ export function Navbar() {
                             );
                         })}
 
-                        {/* TC Hubs Mega Menu */}
-                        <TCHubsMenu />
+                        {/* Extra items that might not be in the order but we still want to show (optional) */}
+                        {NAV_ITEMS.filter(item =>
+                            !['Home', 'Discussies', 'Training', 'Support Portal'].includes(item.name)
+                        ).map(item => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
+                                        isActive
+                                            ? "text-primary border-b-2 border-primary"
+                                            : "text-dark-100 hover:text-primary"
+                                    )}
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
                     </div>
 
                     {/* Right Side Actions */}

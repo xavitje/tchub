@@ -363,7 +363,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                 {messages.length === 0 ? (
                     <div className="text-center text-dark-100 py-12"><p>Nog geen berichten. Start het gesprek!</p></div>
                 ) : (
-                    messages.map((message) => {
+                    messages.map((message, index) => {
                         const isOwn = message.sender.id === session?.user?.id;
                         const isDeleted = !!message.deletedAt;
                         const canEdit = isOwn && !isDeleted && (Date.now() - new Date(message.createdAt).getTime() < 24 * 60 * 60 * 1000); // Expanded for testing
@@ -448,7 +448,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
                                                             {reactingToMessageId === message.id && (
                                                                 <div
-                                                                    className={`absolute bottom-full mb-2 ${isOwn ? 'right-0' : 'left-0'} bg-white shadow-lg rounded-full border border-light-400 p-1 flex items-center gap-1 min-w-max z-50 animate-in fade-in zoom-in duration-200`}
+                                                                    className={`absolute ${index < 2 ? 'top-full mt-2' : 'bottom-full mb-2'} ${isOwn ? 'right-0' : 'left-0'} bg-white shadow-lg rounded-full border border-light-400 p-1 flex items-center gap-1 min-w-max z-50 animate-in fade-in zoom-in duration-200`}
                                                                     onMouseLeave={() => setReactingToMessageId(null)}
                                                                 >
                                                                     {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
@@ -494,7 +494,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
                                                                 {activeMessageMenu === message.id && (
                                                                     <div
-                                                                        className={`absolute bottom-full mb-1 ${isOwn ? 'right-0' : 'left-0'} w-32 bg-white shadow-lg rounded-lg border border-light-400 z-50 py-1 animate-in fade-in slide-in-from-bottom-2 duration-200`}
+                                                                        className={`absolute ${index < 2 ? 'top-full mt-1' : 'bottom-full mb-1'} ${isOwn ? 'right-0' : 'left-0'} w-32 bg-white shadow-lg rounded-lg border border-light-400 z-50 py-1 animate-in fade-in slide-in-from-bottom-2 duration-200`}
                                                                         onMouseLeave={() => setActiveMessageMenu(null)}
                                                                     >
                                                                         {canEdit && (

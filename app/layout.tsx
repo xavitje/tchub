@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     description: "Centraal platform voor communicatie, informatie en tools",
 };
 
+import { SettingsProvider } from "@/components/providers/SettingsProvider";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -21,10 +23,12 @@ export default function RootLayout({
         <html lang="nl">
             <body className={inter.className}>
                 <AuthProvider>
-                    <NotificationProvider>
-                        <Navbar />
-                        <main>{children}</main>
-                    </NotificationProvider>
+                    <SettingsProvider>
+                        <NotificationProvider>
+                            <Navbar />
+                            <main>{children}</main>
+                        </NotificationProvider>
+                    </SettingsProvider>
                 </AuthProvider>
             </body>
         </html>

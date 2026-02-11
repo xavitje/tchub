@@ -34,23 +34,30 @@ export default function HomePage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const [postsRes, statsRes, quickLinksRes] = await Promise.all([
-                    fetch('/api/posts'),
+                // Fetch everything else in parallel
+                const [announcementsRes, postsRes, statsRes, quickLinksRes] = await Promise.all([
+                    fetch('/api/posts?type=ANNOUNCEMENT&limit=5'),
+                    fetch('/api/posts?limit=10'),
                     fetch('/api/stats'),
                     session?.user?.id ? fetch('/api/quicklinks') : Promise.resolve(new Response('[]'))
                 ]);
 
-                const postsData = await postsRes.json();
-                if (Array.isArray(postsData)) {
-                    setAnnouncements(postsData.filter(p => p.type === 'ANNOUNCEMENT'));
-                    const nonAnnouncements = postsData.filter(p => p.type !== 'ANNOUNCEMENT');
+                // Process announcements immediately
+                if (announcementsRes.ok) {
+                    const announcementsData = await announcementsRes.json();
+                    setAnnouncements(announcementsData);
+                }
+
+                if (postsRes.ok) {
+                    const postsData = await postsRes.json();
+                    const nonAnnouncements = postsData.filter((p: any) => p.type !== 'ANNOUNCEMENT');
                     setPosts(nonAnnouncements);
 
                     // Get events and polls
-                    const events = nonAnnouncements.filter(p => p.type === 'EVENT').slice(0, 5);
+                    const events = nonAnnouncements.filter((p: any) => p.type === 'EVENT').slice(0, 5);
                     setUpcomingEvents(events);
 
-                    const polls = nonAnnouncements.filter(p => p.type === 'POLL').slice(0, 3);
+                    const polls = nonAnnouncements.filter((p: any) => p.type === 'POLL').slice(0, 3);
                     setActivePolls(polls);
                 }
 

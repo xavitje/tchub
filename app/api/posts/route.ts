@@ -4,12 +4,22 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const type = searchParams.get('type');
+        const limit = searchParams.get('limit');
+        const isPinned = searchParams.get('isPinned');
+
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
 
         const posts = await prisma.post.findMany({
+            where: {
+                type: type ? (type as any) : undefined,
+                isPinned: isPinned === 'true' ? true : undefined,
+            },
+            take: limit ? parseInt(limit) : undefined,
             include: {
                 author: true,
                 poll: {
