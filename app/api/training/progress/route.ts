@@ -45,13 +45,16 @@ export async function POST(request: Request) {
             },
             update: {
                 status: status || 'COMPLETED',
-                updatedAt: new Date()
+                lastAccessed: new Date(),
+                completedAt: status === 'COMPLETED' ? new Date() : undefined
             },
             create: {
                 userId: session.user.id,
                 courseId: courseId,
                 lessonId: lessonId,
-                status: status || 'COMPLETED'
+                status: status || 'COMPLETED',
+                lastAccessed: new Date(),
+                completedAt: status === 'COMPLETED' ? new Date() : undefined
             }
         });
 
