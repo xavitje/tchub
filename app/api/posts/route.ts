@@ -38,7 +38,7 @@ export async function GET(request: Request) {
             ],
         });
 
-        const postsWithLikeStatus = posts.map(post => ({
+        const postsWithLikeStatus = posts.map((post: any) => ({
             ...post,
             likedByMe: userId ? post.likes.length > 0 : false,
             likes: undefined,
@@ -109,15 +109,20 @@ export async function POST(request: Request) {
         });
 
         if (users.length > 0) {
-            await prisma.notification.createMany({
-                data: users.map(user => ({
-                    userId: user.id,
-                    type: type === 'POLL' ? 'NEW_POLL' : (type === 'EVENT' ? 'NEW_EVENT' : 'NEW_POST'),
-                    title: `Nieuwe ${type === 'POLL' ? 'peiling' : (type === 'EVENT' ? 'evenement' : 'post')}`,
-                    message: title,
-                    link: `/discussions/${post.id}`
-                }))
-            });
+            const notificationData = users.map((user: any) => ({
+                userId: user.id,
+                type: type === 'POLL' ? 'NEW_POLL' : (type === 'EVENT' ? 'NEW_EVENT' : 'NEW_POST'),
+                title: `Nieuwe ${type === 'POLL' ? 'peiling' : (type === 'EVENT' ? 'evenement' : 'post')}`,
+                message: title,
+                link: `/discussions/${post.id}`
+            }));
+
+            // SQLite doesn't support createMany, so we use a loop or Promise.all
+            for (const data of notificationData) {
+                await prisma.notification.create({ data: data as any }).catch((err: any) => {
+                    console.error('Error creating notification during post creation:', err);
+                });
+            }
         }
 
         return NextResponse.json(post);

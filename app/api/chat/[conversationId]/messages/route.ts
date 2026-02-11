@@ -50,9 +50,9 @@ export async function GET(
             // Double check if conversation exists
             const convo = await prisma.conversation.findUnique({
                 where: { id: params.conversationId },
-                select: { id: true, userIds: true }
+                include: { users: { select: { id: true } } }
             });
-            console.log(`[API GET Messages] Conversation exists?`, convo ? `Yes, members: ${convo.userIds}` : 'No');
+            console.log(`[API GET Messages] Conversation exists?`, convo ? `Yes, members: ${convo.users.map((u: any) => u.id)}` : 'No');
         }
 
         return NextResponse.json(messages);
@@ -119,18 +119,22 @@ export async function POST(
         });
 
         // Create notifications for other participants
-        const otherParticipants = updatedConversation.users.filter(u => u.id !== session.user.id);
+        const otherParticipants = updatedConversation.users.filter((u: any) => u.id !== session.user.id);
 
         if (otherParticipants.length > 0) {
-            await prisma.notification.createMany({
-                data: otherParticipants.map(user => ({
-                    userId: user.id,
-                    type: 'MENTION', // Using MENTION as a generic 'new message' type for now, or we could add NEW_MESSAGE to enum
-                    title: `Nieuw bericht van ${session.user.name || 'iemand'}`,
-                    message: content ? (content.length > 50 ? content.substring(0, 47) + '...' : content) : 'Nieuwe bijlage',
-                    link: `/chat/${params.conversationId}`
-                }))
-            });
+            const notifications = otherParticipants.map((user: any) => ({
+                userId: user.id,
+                type: 'MENTION',
+                title: `Nieuw bericht van ${session.user.name || 'iemand'}`,
+                message: content ? (content.length > 50 ? content.substring(0, 47) + '...' : content) : 'Nieuwe bijlage',
+                link: `/chat/${params.conversationId}`
+            }));
+
+            for (const data of notifications) {
+                await prisma.notification.create({ data: data as any }).catch((err: any) => {
+                    console.error('Error creating notification during chat message:', err);
+                });
+            }
         }
 
         return NextResponse.json(message);

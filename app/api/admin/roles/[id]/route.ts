@@ -21,14 +21,21 @@ export async function PATCH(
             data: {
                 name,
                 description,
-                permissionIds: permissionIds || []
+                permissions: {
+                    set: (permissionIds || []).map((id: string) => ({ id }))
+                }
             },
             include: {
                 permissions: true
             }
         });
 
-        return NextResponse.json(role);
+        const formattedRole = {
+            ...role,
+            permissionIds: role.permissions.map(p => p.id)
+        };
+
+        return NextResponse.json(formattedRole);
     } catch (error) {
         console.error('Error updating role:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

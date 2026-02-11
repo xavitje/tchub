@@ -71,9 +71,17 @@ export async function POST(request: Request) {
                 where: { name: r.name },
                 update: {
                     description: r.description,
-                    permissionIds: r.permissionIds
+                    permissions: {
+                        set: r.permissionIds.map(id => ({ id }))
+                    }
                 },
-                create: r
+                create: {
+                    name: r.name,
+                    description: r.description,
+                    permissions: {
+                        connect: r.permissionIds.map(id => ({ id }))
+                    }
+                }
             });
             dbRoles.push(role);
         }

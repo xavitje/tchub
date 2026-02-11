@@ -14,7 +14,11 @@ export async function GET() {
 
         const conversations = await prisma.conversation.findMany({
             where: {
-                userIds: { has: session.user.id }
+                users: {
+                    some: {
+                        id: session.user.id
+                    }
+                }
             },
             include: {
                 users: {
@@ -66,8 +70,8 @@ export async function POST(request: Request) {
                 where: {
                     isGroup: false,
                     AND: [
-                        { userIds: { has: session.user.id } },
-                        { userIds: { has: userIds[0] } }
+                        { users: { some: { id: session.user.id } } },
+                        { users: { some: { id: userIds[0] } } }
                     ]
                 }
             });
@@ -77,12 +81,16 @@ export async function POST(request: Request) {
             }
         }
 
+        const allUserIds = Array.from(new Set([...userIds, session.user.id]));
+
         const conversation = await prisma.conversation.create({
             data: {
                 isGroup,
                 name: isGroup ? name : undefined,
                 lastMessageAt: new Date(),
-                userIds: [...userIds, session.user.id]
+                users: {
+                    connect: allUserIds.map(id => ({ id }))
+                }
             }
         });
 

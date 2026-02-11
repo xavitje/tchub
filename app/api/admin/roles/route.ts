@@ -23,10 +23,15 @@ export async function GET() {
             orderBy: { name: 'asc' }
         }).catch(err => {
             console.error('Prisma Error (findMany roles):', err);
-            return []; // Return empty array if collection doesn't exist yet
+            return [];
         });
 
-        return NextResponse.json(roles);
+        const formattedRoles = roles.map(role => ({
+            ...role,
+            permissionIds: role.permissions.map(p => p.id)
+        }));
+
+        return NextResponse.json(formattedRoles);
     } catch (error) {
         console.error('Fatal Error fetching roles:', error);
         return NextResponse.json({
@@ -51,14 +56,21 @@ export async function POST(request: Request) {
             data: {
                 name,
                 description,
-                permissionIds: permissionIds || []
+                permissions: {
+                    connect: (permissionIds || []).map((id: string) => ({ id }))
+                }
             },
             include: {
                 permissions: true
             }
         });
 
-        return NextResponse.json(role);
+        const formattedRole = {
+            ...role,
+            permissionIds: role.permissions.map(p => p.id)
+        };
+
+        return NextResponse.json(formattedRole);
     } catch (error) {
         console.error('Error creating role:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

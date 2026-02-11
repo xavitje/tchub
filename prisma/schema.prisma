@@ -3,10 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -15,7 +16,7 @@ datasource db {
 // ============================================
 
 model User {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(cuid())
   azureAdId       String?   @unique
   email           String    @unique
   displayName     String
@@ -24,8 +25,8 @@ model User {
   department      String?
   jobTitle        String?
   profileImage    String?
-  role            UserRole  @default(EMPLOYEE) // Legacy: remove after migration
-  roleId          String?   @db.ObjectId
+  role            String    @default("EMPLOYEE") // Legacy: remove after migration
+  roleId          String?
   customRole      Role?     @relation(fields: [roleId], references: [id])
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
@@ -44,8 +45,7 @@ model User {
   // Settings & Chat
   settings        UserSettings?
   quickLinks      QuickLink[]      @relation("QuickLinks")
-  conversationIds String[]     @db.ObjectId
-  conversations   Conversation[] @relation(fields: [conversationIds], references: [id])
+  conversations   Conversation[] 
   messages        Message[]
 
   // Chat Extras
@@ -54,30 +54,21 @@ model User {
   typingIndicators TypingIndicator[]
 }
 
-enum UserRole {
-  EMPLOYEE
-  MANAGER
-  ADMIN
-  HQ_ADMIN
-}
-
 model Role {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  permissionIds String[] @db.ObjectId
-  permissions   Permission[] @relation(fields: [permissionIds], references: [id])
+  permissions   Permission[]
   users         User[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Permission {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  roleIds     String[] @db.ObjectId
-  roles       Role[]   @relation(fields: [roleIds], references: [id])
+  roles       Role[]   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -87,10 +78,10 @@ model Permission {
 // ============================================
 
 model UserSettings {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String    @unique @db.ObjectId
-  theme           Theme     @default(SYSTEM)
-  headerOrder     String[]  @default(["home", "discussions", "training", "hubs", "support"])
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  theme           String    @default("SYSTEM")
+  headerOrder     String    @default("home,discussions,training,hubs,support")
   emailNotifications Boolean  @default(true)
   pushNotifications  Boolean  @default(true)
 
@@ -98,8 +89,8 @@ model UserSettings {
 }
 
 model QuickLink {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String    @db.ObjectId
+  id              String    @id @default(cuid())
+  userId          String
   title           String
   url             String
   icon            String?
@@ -112,18 +103,12 @@ model QuickLink {
   @@index([userId, order])
 }
 
-enum Theme {
-  LIGHT
-  DARK
-  SYSTEM
-}
-
 // ============================================
 // CHAT & MESSAGING
 // ============================================
 
 model Conversation {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(cuid())
   name            String?   // For group chats
   isGroup         Boolean   @default(false)
   image           String?   // For group chats
@@ -131,8 +116,7 @@ model Conversation {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  userIds         String[]  @db.ObjectId
-  users           User[]    @relation(fields: [userIds], references: [id])
+  users           User[]    
 
   messages        Message[]
 
@@ -143,9 +127,9 @@ model Conversation {
 }
 
 model Message {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  conversationId  String    @db.ObjectId
-  senderId        String    @db.ObjectId
+  id              String    @id @default(cuid())
+  conversationId  String
+  senderId        String
   content         String?
   image           String?
   fileUrl         String?
@@ -162,7 +146,7 @@ model Message {
   reactions       Reaction[]
   reads           MessageRead[]
 
-  replyToId      String?  @db.ObjectId
+  replyToId      String?  
   replyTo        Message? @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies        Message[] @relation("ReplyTo")
 
@@ -170,9 +154,9 @@ model Message {
 }
 
 model Reaction {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  messageId       String    @db.ObjectId
-  userId          String    @db.ObjectId
+  id              String    @id @default(cuid())
+  messageId       String
+  userId          String
   emoji           String
 
   message         Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
@@ -181,9 +165,9 @@ model Reaction {
 }
 
 model ConversationSettings {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  conversationId  String   @db.ObjectId
-  userId          String   @db.ObjectId
+  id              String   @id @default(cuid())
+  conversationId  String
+  userId          String
   isMuted         Boolean  @default(false)
   mutedUntil      DateTime?
 
@@ -194,9 +178,9 @@ model ConversationSettings {
 }
 
 model TypingIndicator {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  conversationId  String   @db.ObjectId
-  userId          String   @db.ObjectId
+  id              String   @id @default(cuid())
+  conversationId  String
+  userId          String
   lastTypingAt    DateTime @default(now())
 
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -206,9 +190,9 @@ model TypingIndicator {
 }
 
 model MessageRead {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  messageId  String   @db.ObjectId
-  userId     String   @db.ObjectId
+  id         String   @id @default(cuid())
+  messageId  String
+  userId     String
   readAt     DateTime @default(now())
 
   message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
@@ -223,15 +207,15 @@ model MessageRead {
 // ============================================
 
 model Post {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  type            PostType
+  id              String      @id @default(cuid())
+  type            String      // POST, POLL, EVENT, ANNOUNCEMENT
   title           String
   content         String
   imageUrl        String?
-  authorId        String      @db.ObjectId
+  authorId        String      
   isPinned        Boolean     @default(false)
   pinnedAt        DateTime?
-  pinnedById      String?     @db.ObjectId
+  pinnedById      String?     
   viewCount       Int         @default(0)
   likeCount       Int         @default(0)
   commentCount    Int         @default(0)
@@ -239,7 +223,7 @@ model Post {
   publishedAt     DateTime?
 
   // Announcement-specific fields
-  announcementType AnnouncementType? @default(REGULAR)
+  announcementType String? @default("REGULAR") // REGULAR, SHAREPOINT_LINK
   sharePointUrl     String?
 
   createdAt       DateTime    @default(now())
@@ -249,8 +233,7 @@ model Post {
   author          User        @relation("UserPosts", fields: [authorId], references: [id])
   pinnedBy        User?       @relation("PinnedPosts", fields: [pinnedById], references: [id])
   comments        Comment[]
-  tagIds          String[]    @db.ObjectId
-  tags            Tag[]       @relation(fields: [tagIds], references: [id])
+  tags            Tag[]       
   favorites       Favorite[]
   likes           PostLike[]
   attachments     Attachment[]
@@ -264,25 +247,13 @@ model Post {
   @@index([authorId])
 }
 
-enum AnnouncementType {
-  REGULAR
-  SHAREPOINT_LINK
-}
-
-enum PostType {
-  POST
-  POLL
-  EVENT
-  ANNOUNCEMENT
-}
-
 // ============================================
 // POLLS
 // ============================================
 
 model Poll {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  postId          String      @unique @db.ObjectId
+  id              String      @id @default(cuid())
+  postId          String      @unique 
   endsAt          DateTime?
   allowMultiple   Boolean     @default(false)
   isAnonymous     Boolean     @default(false)
@@ -293,8 +264,8 @@ model Poll {
 }
 
 model PollOption {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  pollId          String      @db.ObjectId
+  id              String      @id @default(cuid())
+  pollId          String      
   text            String
   order           Int
   voteCount       Int         @default(0)
@@ -306,10 +277,10 @@ model PollOption {
 }
 
 model PollVote {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  pollId          String      @db.ObjectId
-  optionId        String      @db.ObjectId
-  userId          String      @db.ObjectId
+  id              String      @id @default(cuid())
+  pollId          String      
+  optionId        String      
+  userId          String      
   createdAt       DateTime    @default(now())
 
   poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
@@ -325,8 +296,8 @@ model PollVote {
 // ============================================
 
 model Event {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  postId          String      @unique @db.ObjectId
+  id              String      @id @default(cuid())
+  postId          String      @unique 
   startDate       DateTime
   endDate         DateTime?
   location        String?
@@ -340,10 +311,10 @@ model Event {
 }
 
 model EventRegistration {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  eventId         String      @db.ObjectId
-  userId          String      @db.ObjectId
-  status          RegistrationStatus @default(REGISTERED)
+  id              String      @id @default(cuid())
+  eventId         String      
+  userId          String      
+  status          String      @default("REGISTERED") // REGISTERED, WAITLIST, CANCELLED
   syncedToOutlook Boolean     @default(false)
   createdAt       DateTime    @default(now())
 
@@ -354,22 +325,16 @@ model EventRegistration {
   @@index([userId])
 }
 
-enum RegistrationStatus {
-  REGISTERED
-  WAITLIST
-  CANCELLED
-}
-
 // ============================================
 // COMMENTS
 // ============================================
 
 model Comment {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  postId          String      @db.ObjectId
-  authorId        String      @db.ObjectId
+  id              String      @id @default(cuid())
+  postId          String      
+  authorId        String      
   content         String
-  parentId        String?     @db.ObjectId
+  parentId        String?     
   likeCount       Int         @default(0)
   isEdited        Boolean     @default(false)
   createdAt       DateTime    @default(now())
@@ -389,11 +354,11 @@ model Comment {
 // ============================================
 
 model Favorite {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String      @db.ObjectId
-  postId          String?     @db.ObjectId
-  hubId           String?     @db.ObjectId
-  type            FavoriteType
+  id              String      @id @default(cuid())
+  userId          String      
+  postId          String?     
+  hubId           String?     
+  type            String      // POST, HUB_PAGE
   createdAt       DateTime    @default(now())
 
   user            User        @relation(fields: [userId], references: [id])
@@ -405,17 +370,12 @@ model Favorite {
   @@index([userId])
 }
 
-enum FavoriteType {
-  POST
-  HUB_PAGE
-}
-
 // ============================================
 // TC HUBS
 // ============================================
 
 model Hub {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  id              String      @id @default(cuid())
   name            String
   slug            String      @unique
   description     String?
@@ -436,9 +396,9 @@ model Hub {
 // ============================================
 
 model Notification {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String      @db.ObjectId
-  type            NotificationType
+  id              String      @id @default(cuid())
+  userId          String      
+  type            String      // NEW_POST, NEW_COMMENT, etc.
   title           String
   message         String
   link            String?
@@ -450,34 +410,22 @@ model Notification {
   @@index([userId, isRead, createdAt])
 }
 
-enum NotificationType {
-  NEW_POST
-  NEW_COMMENT
-  NEW_POLL
-  NEW_EVENT
-  POLL_ENDING_SOON
-  EVENT_REMINDER
-  MENTION
-  SYSTEM
-}
-
 // ============================================
 // TAGS & ATTACHMENTS
 // ============================================
 
 model Tag {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  id              String      @id @default(cuid())
   name            String      @unique
   slug            String      @unique
   color           String?
 
-  postIds         String[]    @db.ObjectId
-  posts           Post[]      @relation(fields: [postIds], references: [id])
+  posts           Post[]      
 }
 
 model Attachment {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  postId          String      @db.ObjectId
+  id              String      @id @default(cuid())
+  postId          String      
   fileName        String
   fileUrl         String
   fileType        String
@@ -490,9 +438,9 @@ model Attachment {
 }
 
 model PostLike {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  postId    String   @db.ObjectId
-  userId    String   @db.ObjectId
+  id        String   @id @default(cuid())
+  postId    String   
+  userId    String   
   createdAt DateTime @default(now())
 
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
