@@ -21,6 +21,12 @@ export async function GET(
                         registrations: true,
                     },
                 },
+                poll: {
+                    include: {
+                        options: true,
+                        votes: true,
+                    }
+                },
                 favorites: userId ? {
                     where: { userId: userId }
                 } : false,
