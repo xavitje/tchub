@@ -20,7 +20,7 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
         // Fetch course details
         async function fetchCourse() {
             try {
-                const res = await fetch(`/api/training/courses/${params.id}`);
+                const res = await fetch(`/api/training/${params.id}`);
                 const data = await res.json();
                 setCourse(data);
             } catch (error) {
