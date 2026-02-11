@@ -4,13 +4,18 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
+    console.log('--- POST /api/support/tickets START ---');
     try {
         const session = await getServerSession(authOptions);
+        console.log('Session user ID:', session?.user?.id);
+
         if (!session?.user?.id) {
+            console.error('Unauthorized: No user ID in session');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
+        console.log('Request body:', body);
         const { subject, category, priority, content } = body;
 
         if (!subject || !content) {
