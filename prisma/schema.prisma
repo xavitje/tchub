@@ -41,6 +41,7 @@ model User {
   eventRegistrations EventRegistration[]
   notifications   Notification[]
   likes           PostLike[]
+  trainingProgress UserTrainingProgress[]
 
   // Settings & Chat
   settings        UserSettings?
@@ -448,4 +449,73 @@ model PostLike {
 
   @@unique([postId, userId])
   @@index([userId])
+}
+
+// ============================================
+// TRAINING & COURSES
+// ============================================
+
+model TrainingCourse {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  imageUrl      String?
+  level         String    @default("BEGINNER") // BEGINNER, INTERMEDIATE, ADVANCED
+  duration      String?   // e.g. "2 uur"
+  category      String    @default("GENERAL") // GENERAL, SALES, MARKETING, PRODUCT
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  modules       TrainingModule[]
+  progress      UserTrainingProgress[]
+}
+
+model TrainingModule {
+  id            String    @id @default(cuid())
+  courseId      String
+  title         String
+  description   String?
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons       TrainingLesson[]
+
+  @@index([courseId, order])
+}
+
+model TrainingLesson {
+  id            String    @id @default(cuid())
+  moduleId      String
+  title         String
+  content       String?   // Rich text content
+  videoUrl      String?
+  order         Int       @default(0)
+  duration      Int?      // Minutes
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  module        TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress      UserTrainingProgress[]
+
+  @@index([moduleId, order])
+}
+
+model UserTrainingProgress {
+  id            String    @id @default(cuid())
+  userId        String
+  courseId      String
+  lessonId      String
+  status        String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  lastAccessed  DateTime  @default(now())
+  completedAt   DateTime?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson        TrainingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, courseId])
 }
