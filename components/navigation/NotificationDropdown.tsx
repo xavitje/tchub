@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, MessageSquare, FileText, Calendar, CheckSquare, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,6 +19,7 @@ type Notification = {
 };
 
 export function NotificationDropdown() {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,15 +61,17 @@ export function NotificationDropdown() {
     }, []);
 
     const markAsRead = async (id: string, link: string | null) => {
+        // Navigate immediately if there's a link
+        if (link) {
+            setIsOpen(false);
+            router.push(link);
+        }
+
         try {
             await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         } catch (error) {
             console.error('Error marking notification as read:', error);
-        }
-
-        if (link) {
-            setIsOpen(false);
         }
     };
 
@@ -189,19 +193,6 @@ export function NotificationDropdown() {
                                             <p className="text-xs text-dark-100 mt-1 line-clamp-2 leading-relaxed">
                                                 {notification.message}
                                             </p>
-                                            {notification.link && (
-                                                <Link
-                                                    href={notification.link}
-                                                    className="absolute inset-0 z-0"
-                                                    onClick={(e) => {
-                                                        // Prevent propagation so markAsRead handles it
-                                                        e.stopPropagation();
-                                                        markAsRead(notification.id, notification.link);
-                                                    }}
-                                                >
-                                                    <span className="sr-only">Bekijk</span>
-                                                </Link>
-                                            )}
                                         </div>
                                         {!notification.isRead && (
                                             <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>

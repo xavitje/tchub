@@ -28,7 +28,7 @@ export async function GET(
         let nextLessonId = null;
 
         // 1. Check for next lesson in SAME module
-        const nextInModule = lesson.module.lessons.find(l => l.order > lesson.order);
+        const nextInModule = lesson.module.lessons.find((l: any) => l.order > lesson.order);
         if (nextInModule) {
             nextLessonId = nextInModule.id;
         } else {
