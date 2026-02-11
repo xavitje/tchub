@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, Clock, Award, CheckCircle2, Play, Circle, Plus, Trash2, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Clock, Award, CheckCircle2, Play, Circle, Plus, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CourseDetailPage({ params }: { params: { id: string } }) {
     const { data: session } = useSession();
+    const router = useRouter();
     const [course, setCourse] = useState<any>(null);
+    const [progress, setProgress] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
@@ -20,6 +23,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
 
     useEffect(() => {
         fetchCourse();
+        fetchProgress();
     }, [params.id]);
 
     async function fetchCourse() {
@@ -27,7 +31,6 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             const res = await fetch(`/api/training/${params.id}`);
             const data = await res.json();
             setCourse(data);
-            // Expand first module by default
             if (data.modules?.length > 0) {
                 setExpandedModules({ [data.modules[0].id]: true });
             }
@@ -37,6 +40,21 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             setLoading(false);
         }
     }
+
+    async function fetchProgress() {
+        try {
+            const res = await fetch(`/api/training/progress?courseId=${params.id}`);
+            const data = await res.json();
+            setProgress(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const totalLessons = course?.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 0;
+    const completedLessons = progress.filter(p => p.status === 'COMPLETED').length;
+    const completionPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const isFullyCompleted = completionPercentage === 100 && totalLessons > 0;
 
     const toggleModule = (moduleId: string) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -94,8 +112,8 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                     <span className="text-sm font-bold text-dark">{course.duration || 'N/A'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <Award className="w-5 h-5 text-success" />
-                                    <span className="text-sm font-bold text-dark">Certificaat</span>
+                                    <Award className={`w-5 h-5 ${isFullyCompleted ? 'text-success animate-bounce' : 'text-dark-100'}`} />
+                                    <span className={`text-sm font-bold ${isFullyCompleted ? 'text-success' : 'text-dark'}`}>Certificaat</span>
                                 </div>
                             </div>
                             {canAccessAdmin && (
@@ -116,7 +134,10 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Module List */}
                     <div className="lg:col-span-2 space-y-4">
-                        <h2 className="text-xl font-bold text-dark mb-4">Cursus Inhoud</h2>
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-xl font-bold text-dark">Cursus Inhoud</h2>
+                            <span className="text-sm text-dark-100 font-medium">{completedLessons} van {totalLessons} voltooid</span>
+                        </div>
 
                         {course.modules?.map((module: any, idx: number) => (
                             <div key={module.id} className="card overflow-hidden">
@@ -133,25 +154,42 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                             <p className="text-xs text-dark-100">{module.lessons?.length || 0} lessen</p>
                                         </div>
                                     </div>
-                                    {expandedModules[module.id] ? <ChevronUp className="w-5 h-5 text-dark-100" /> : <ChevronDown className="w-5 h-5 text-dark-100" />}
+                                    <div className="flex items-center gap-4">
+                                        {expandedModules[module.id] ? <ChevronUp className="w-5 h-5 text-dark-100" /> : <ChevronDown className="w-5 h-5 text-dark-100" />}
+                                    </div>
                                 </button>
 
                                 {expandedModules[module.id] && (
                                     <div className="border-t border-light-300 divide-y divide-light-300">
-                                        {module.lessons?.map((lesson: any) => (
-                                            <div key={lesson.id} className="p-4 flex items-center justify-between hover:bg-light-50">
-                                                <div className="flex items-center gap-4">
-                                                    <Circle className="w-4 h-4 text-dark-100" />
-                                                    <span className="text-sm text-dark font-medium">{lesson.title}</span>
+                                        {module.lessons?.map((lesson: any) => {
+                                            const isLessonCompleted = progress.some(p => p.lessonId === lesson.id && p.status === 'COMPLETED');
+                                            return (
+                                                <div key={lesson.id} className="p-4 flex items-center justify-between hover:bg-light-50">
+                                                    <div className="flex items-center gap-4">
+                                                        {isLessonCompleted ? (
+                                                            <CheckCircle2 className="w-4 h-4 text-success" />
+                                                        ) : (
+                                                            <Circle className="w-4 h-4 text-dark-100 opacity-20" />
+                                                        )}
+                                                        <Link
+                                                            href={`/training/lesson/${lesson.id}`}
+                                                            className={`text-sm font-medium hover:text-primary transition-colors ${isLessonCompleted ? 'text-dark-100 line-through' : 'text-dark'}`}
+                                                        >
+                                                            {lesson.title}
+                                                        </Link>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-xs text-dark-100">{lesson.duration || '5'} min</span>
+                                                        <Link
+                                                            href={`/training/lesson/${lesson.id}`}
+                                                            className={`p-2 rounded-full transition-colors ${isLessonCompleted ? 'text-success hover:bg-success/10' : 'text-primary hover:bg-primary/10'}`}
+                                                        >
+                                                            <Play className="w-4 h-4" />
+                                                        </Link>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="text-xs text-dark-100">{lesson.duration} min</span>
-                                                    <button className="p-1 hover:text-primary transition-colors">
-                                                        <Play className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                         {isEditing && (
                                             <button className="w-full p-4 text-sm text-primary hover:bg-primary/5 flex items-center justify-center gap-2 font-bold transition-all">
                                                 <Plus className="w-4 h-4" /> Les Toevoegen
@@ -170,51 +208,38 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                 <Plus className="w-5 h-5" /> Module Toevoegen
                             </button>
                         )}
-
-                        {showAddModule && (
-                            <div className="card p-6 border-2 border-primary">
-                                <h3 className="font-bold text-dark mb-4">Nieuwe Module</h3>
-                                <input
-                                    type="text"
-                                    className="input w-full mb-4"
-                                    placeholder="Module Titel"
-                                    value={newModuleTitle}
-                                    onChange={(e) => setNewModuleTitle(e.target.value)}
-                                    autoFocus
-                                />
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={handleAddModule}
-                                        className="btn btn-primary flex-1"
-                                    >
-                                        Toevoegen
-                                    </button>
-                                    <button
-                                        onClick={() => setShowAddModule(false)}
-                                        className="btn btn-outline flex-1"
-                                    >
-                                        Annuleren
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Sidebar / Progress */}
                     <div className="space-y-6">
-                        <div className="card p-6 bg-gradient-to-br from-primary to-primary-600 text-white border-0 shadow-lg shadow-primary/20">
-                            <h3 className="text-lg font-bold mb-4">Mijn Voortgang</h3>
+                        <div className={`card p-6 shadow-lg transition-all ${isFullyCompleted ? 'bg-gradient-to-br from-success to-success-600 text-white border-0 shadow-success/20' : 'bg-gradient-to-br from-primary to-primary-600 text-white border-0 shadow-primary/20'}`}>
+                            <h3 className="text-lg font-bold mb-4">{isFullyCompleted ? 'Gefeliciteerd!' : 'Mijn Voortgang'}</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span>Voltooiing</span>
-                                    <span className="font-bold">0%</span>
+                                    <span>{isFullyCompleted ? 'Cursus Voltooid' : 'Voltooiing'}</span>
+                                    <span className="font-bold">{completionPercentage}%</span>
                                 </div>
                                 <div className="w-full bg-white/20 rounded-full h-2">
-                                    <div className="bg-white h-2 rounded-full" style={{ width: '0%' }}></div>
+                                    <div className="bg-white h-2 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }}></div>
                                 </div>
-                                <button className="w-full btn bg-white text-primary hover:bg-white/90 border-0 font-bold mt-4">
-                                    Hervatten
-                                </button>
+                                {isFullyCompleted ? (
+                                    <Link
+                                        href={`/training/certificate/${course.id}`}
+                                        className="w-full btn bg-white text-success hover:bg-white/90 border-0 font-bold mt-4 flex items-center justify-center gap-2"
+                                    >
+                                        <Award className="w-5 h-5" /> Bekijk Certificaat
+                                    </Link>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            const nextLesson = course.modules?.[0]?.lessons?.[0];
+                                            if (nextLesson) router.push(`/training/lesson/${nextLesson.id}`);
+                                        }}
+                                        className="w-full btn bg-white text-primary hover:bg-white/90 border-0 font-bold mt-4"
+                                    >
+                                        Hervatten
+                                    </button>
+                                )}
                             </div>
                         </div>
 
