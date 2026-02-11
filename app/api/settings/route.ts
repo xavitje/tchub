@@ -25,11 +25,21 @@ export async function GET() {
         }
 
         // Convert string back to array for frontend
+        let headerOrder = settings.headerOrder;
+        if (typeof headerOrder === 'string') {
+            try {
+                headerOrder = JSON.parse(headerOrder);
+            } catch (e) {
+                console.error('Error parsing headerOrder:', e);
+                headerOrder = ['home', 'discussions', 'training', 'hubs', 'support'];
+            }
+        }
+
         const formattedSettings = {
             ...settings,
-            headerOrder: typeof settings.headerOrder === 'string'
-                ? JSON.parse(settings.headerOrder)
-                : settings.headerOrder
+            headerOrder: Array.isArray(headerOrder)
+                ? headerOrder
+                : ['home', 'discussions', 'training', 'hubs', 'support']
         };
 
         return NextResponse.json(formattedSettings);

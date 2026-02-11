@@ -72,6 +72,22 @@ export function TCHubsMenu({ isMobile, onNavigate }: TCHubsMenuProps) {
         >
             {/* Trigger Button */}
             <button
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    if (!isOpen) { // If we're opening it
+                        const fetchHubs = async () => {
+                            setLoading(true);
+                            try {
+                                const res = await fetch(`/api/hubs?t=${Date.now()}`, { cache: 'no-store' });
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    setHubs(data);
+                                }
+                            } catch (e) { console.error(e); } finally { setLoading(false); }
+                        };
+                        fetchHubs();
+                    }
+                }}
                 className={cn(
                     "px-4 py-2 text-sm font-medium transition-colors duration-200",
                     isOpen
