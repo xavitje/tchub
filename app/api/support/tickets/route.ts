@@ -18,6 +18,7 @@ export async function POST(request: Request) {
         }
 
         // Create the ticket
+        console.log('Creating ticket for user:', session.user.id);
         const ticket = await prisma.supportTicket.create({
             data: {
                 userId: session.user.id,
@@ -34,10 +35,15 @@ export async function POST(request: Request) {
             }
         });
 
+        console.log('Ticket created:', ticket.id);
         return NextResponse.json(ticket);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating ticket:', error);
-        return NextResponse.json({ error: 'Failed to create ticket' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Failed to create ticket',
+            details: error.message,
+            stack: error.stack
+        }, { status: 500 });
     }
 }
 
