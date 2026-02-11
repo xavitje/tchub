@@ -36,16 +36,16 @@ export async function GET() {
             select: { lessonId: true }
         });
 
-        const completedLessonIds = new Set(userProgress.map(p => p.lessonId));
+        const completedLessonIds = new Set(userProgress.map((p: { lessonId: string }) => p.lessonId));
 
         let completedCoursesCount = 0;
         const completedCourseIds: string[] = [];
 
         for (const course of courses) {
-            const allLessons = course.modules.flatMap(m => m.lessons);
+            const allLessons = course.modules.flatMap((m: { lessons: { id: string }[] }) => m.lessons);
             if (allLessons.length === 0) continue; // Skip empty courses
 
-            const isCompleted = allLessons.every(l => completedLessonIds.has(l.id));
+            const isCompleted = allLessons.every((l: { id: string }) => completedLessonIds.has(l.id));
             if (isCompleted) {
                 completedCoursesCount++;
                 completedCourseIds.push(course.id);
