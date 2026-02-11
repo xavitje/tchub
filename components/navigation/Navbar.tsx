@@ -19,7 +19,6 @@ const NAV_ITEMS = [
     { name: 'Training', href: '/training' },
     { name: 'Support Portal', href: '/support' },
     { name: 'Ideas Portal', href: '/ideas' },
-    { name: 'Opgeslagen', href: '/saved' },
 ];
 
 export function Navbar() {
@@ -175,6 +174,14 @@ export function Navbar() {
                                             >
                                                 <User className="w-4 h-4" />
                                                 Profiel
+                                            </Link>
+                                            <Link
+                                                href="/saved"
+                                                className="flex items-center gap-2 px-4 py-2 text-sm text-dark hover:bg-light-200 transition-colors"
+                                                onClick={() => setShowUserMenu(false)}
+                                            >
+                                                <Bookmark className="w-4 h-4" />
+                                                Opgeslagen
                                             </Link>
                                             <Link
                                                 href="/settings"
@@ -341,6 +348,13 @@ export function Navbar() {
                                     className="flex items-center justify-center gap-2 p-3 bg-white border border-light-400 rounded-xl hover:bg-light-100 transition-colors shadow-sm"
                                 >
                                     <User className="w-4 h-4" /> Profiel
+                                </Link>
+                                <Link
+                                    href="/saved"
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="flex items-center justify-center gap-2 p-3 bg-white border border-light-400 rounded-xl hover:bg-light-100 transition-colors shadow-sm"
+                                >
+                                    <Bookmark className="w-4 h-4" /> Opgeslagen
                                 </Link>
                                 <button
                                     onClick={() => { setIsSidebarOpen(false); signOut(); }}
