@@ -250,6 +250,13 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={handleLike}
+                            className={`btn ${post.isLiked ? 'btn-primary' : 'btn-outline'} flex items-center gap-2 transition-all`}
+                        >
+                            <ThumbsUp className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} />
+                            {post.isLiked ? 'Geliked' : 'Like'}
+                        </button>
+                        <button
                             onClick={handleFavorite}
                             className={`btn ${post.isFavorited ? 'btn-primary' : 'btn-outline'} flex items-center gap-2 transition-all`}
                         >

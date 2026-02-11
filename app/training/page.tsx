@@ -16,10 +16,19 @@ export default function TrainingPage() {
         async function fetchCourses() {
             try {
                 const res = await fetch('/api/training');
+                if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
-                setCourses(data);
+
+                // Ensure data is an array
+                if (Array.isArray(data)) {
+                    setCourses(data);
+                } else {
+                    console.error('API did not return an array:', data);
+                    setCourses([]);
+                }
             } catch (error) {
                 console.error('Failed to fetch courses:', error);
+                setCourses([]);
             } finally {
                 setLoading(false);
             }
@@ -34,6 +43,8 @@ export default function TrainingPage() {
             </div>
         );
     }
+
+    const courseList = Array.isArray(courses) ? courses : [];
 
     return (
         <div className="min-h-screen bg-light">
@@ -53,7 +64,7 @@ export default function TrainingPage() {
                     <button className="card p-4 hover:shadow-medium transition-all text-left">
                         <BookOpen className="w-8 h-8 text-primary mb-2" />
                         <h3 className="font-semibold text-dark">Alle Trainingen</h3>
-                        <p className="text-sm text-dark-100 mt-1">{courses.length} beschikbaar</p>
+                        <p className="text-sm text-dark-100 mt-1">{courseList.length} beschikbaar</p>
                     </button>
                     <button className="card p-4 hover:shadow-medium transition-all text-left">
                         <Video className="w-8 h-8 text-info mb-2" />
@@ -78,14 +89,14 @@ export default function TrainingPage() {
                         {/* Courses List */}
                         <div>
                             <h2 className="text-xl font-semibold text-dark mb-4">Beschikbare Trainingen</h2>
-                            {courses.length === 0 ? (
+                            {courseList.length === 0 ? (
                                 <div className="card p-12 text-center text-dark-100">
                                     <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                     <p>Er zijn nog geen trainingen beschikbaar.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {courses.map((course) => (
+                                    {courseList.map((course) => (
                                         <div key={course.id} className="card p-6 hover:shadow-medium transition-shadow">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex-1">
@@ -108,7 +119,7 @@ export default function TrainingPage() {
                                                             <Clock className="w-3 h-3" />
                                                             {course.duration || 'N/A'}
                                                         </span>
-                                                        <span>{course._count.modules} modules</span>
+                                                        <span>{course._count?.modules || 0} modules</span>
                                                     </div>
                                                 </div>
                                                 <Link href={`/training/${course.id}`} className="btn btn-primary ml-4 flex items-center gap-2">
@@ -138,7 +149,7 @@ export default function TrainingPage() {
                         <div className="card p-6">
                             <h3 className="text-lg font-semibold text-dark mb-4">Laatste Updates</h3>
                             <div className="space-y-3">
-                                {courses.slice(0, 3).map((course) => (
+                                {courseList.slice(0, 3).map((course) => (
                                     <Link
                                         key={course.id}
                                         href={`/training/${course.id}`}
@@ -150,7 +161,7 @@ export default function TrainingPage() {
                                         </p>
                                     </Link>
                                 ))}
-                                {courses.length === 0 && (
+                                {courseList.length === 0 && (
                                     <p className="text-sm text-dark-100 italic">Geen recente updates.</p>
                                 )}
                             </div>
