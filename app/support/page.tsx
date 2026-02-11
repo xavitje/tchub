@@ -1,190 +1,165 @@
-import { HelpCircle, MessageCircle, FileText, Search } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { Search, Plus, Ticket, FileText, MessageCircle, ChevronRight, LifeBuoy, Book, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SupportPage() {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const quickLinks = [
+        {
+            title: 'Stel een vraag',
+            description: 'Maak een support ticket aan voor technische problemen of vragen.',
+            icon: <MessageCircle className="w-6 h-6 text-primary" />,
+            href: '/support/create',
+            color: 'bg-primary/10'
+        },
+        {
+            title: 'Mijn Tickets',
+            description: 'Bekijk de status van je lopende en gesloten tickets.',
+            icon: <Ticket className="w-6 h-6 text-info" />,
+            href: '/support/tickets',
+            color: 'bg-info/10'
+        },
+        {
+            title: 'Documentatie',
+            description: 'Handleidingen, policy documenten en veelgestelde vragen.',
+            icon: <Book className="w-6 h-6 text-success" />,
+            href: '/support/docs',
+            color: 'bg-success/10'
+        }
+    ];
+
+    const commonTopics = [
+        { title: 'Wachtwoord resetten', href: '#' },
+        { title: 'Outlook instellen', href: '#' },
+        { title: 'VPN verbinding', href: '#' },
+        { title: 'Vakantiedagen aanvragen', href: '#' },
+    ];
+
     return (
         <div className="min-h-screen bg-light">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold text-dark mb-6">Support Portal</h1>
+            {/* Hero Section */}
+            <div className="bg-white border-b border-light-300">
+                <div className="max-w-5xl mx-auto px-4 py-12 md:py-16 text-center">
+                    <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-6">
+                        <LifeBuoy className="w-8 h-8 text-primary" />
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-dark mb-4">
+                        Hoe kunnen we je helpen, {session?.user?.firstName || 'collega'}?
+                    </h1>
+                    <p className="text-lg text-dark-100 max-w-2xl mx-auto mb-8">
+                        Doorzoek onze kennisbank of neem contact op met support.
+                    </p>
 
-                {/* Header Section */}
-                <div className="mb-8">
-                    <p className="text-dark-100">Hoe kunnen we je vandaag helpen?</p>
+                    <div className="relative max-w-2xl mx-auto">
+                        <input
+                            type="text"
+                            placeholder="Zoek in documentatie..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 rounded-xl border border-light-300 shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent text-lg"
+                        />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-100 w-5 h-5" />
+                    </div>
                 </div>
+            </div>
 
+            <div className="max-w-5xl mx-auto px-4 py-12">
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <button className="card p-6 hover:shadow-medium transition-all text-left">
-                        <HelpCircle className="w-8 h-8 text-primary mb-3" />
-                        <h3 className="font-semibold text-dark mb-2">Stel een Vraag</h3>
-                        <p className="text-sm text-dark-100">
-                            Krijg hulp van ons support team
-                        </p>
-                    </button>
-                    <button className="card p-6 hover:shadow-medium transition-all text-left">
-                        <MessageCircle className="w-8 h-8 text-info mb-3" />
-                        <h3 className="font-semibold text-dark mb-2">Live Chat</h3>
-                        <p className="text-sm text-dark-100">
-                            Chat direct met een support medewerker
-                        </p>
-                    </button>
-                    <button className="card p-6 hover:shadow-medium transition-all text-left">
-                        <FileText className="w-8 h-8 text-success mb-3" />
-                        <h3 className="font-semibold text-dark mb-2">Documentatie</h3>
-                        <p className="text-sm text-dark-100">
-                            Bekijk handleidingen en tutorials
-                        </p>
-                    </button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    {quickLinks.map((link) => (
+                        <Link
+                            key={link.title}
+                            href={link.href}
+                            className="card p-6 hover:shadow-lg transition-all group border-t-4 border-transparent hover:border-primary"
+                        >
+                            <div className={`w-12 h-12 ${link.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                {link.icon}
+                            </div>
+                            <h3 className="text-xl font-bold text-dark mb-2 group-hover:text-primary transition-colors">{link.title}</h3>
+                            <p className="text-dark-100 mb-4">{link.description}</p>
+                            <div className="flex items-center text-sm font-semibold text-primary">
+                                Ga verder <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                        </Link>
+                    ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Popular Topics */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* FAQ */}
-                        <div className="card p-6">
-                            <h2 className="text-xl font-semibold text-dark mb-4">
-                                Veelgestelde Vragen
-                            </h2>
-                            <div className="space-y-4">
-                                {[
-                                    {
-                                        question: 'Hoe reset ik mijn wachtwoord?',
-                                        answer: 'Ga naar de login pagina en klik op "Wachtwoord vergeten". Volg de instructies in de email.',
-                                    },
-                                    {
-                                        question: 'Hoe maak ik een nieuw bericht aan?',
-                                        answer: 'Klik op de "Nieuw bericht" knop in de navigatie of op de Discussies pagina.',
-                                    },
-                                    {
-                                        question: 'Kan ik berichten opslaan als favoriet?',
-                                        answer: 'Ja, klik op het bookmark icoon bij elk bericht om het op te slaan in je favorieten.',
-                                    },
-                                    {
-                                        question: 'Hoe meld ik me aan voor een event?',
-                                        answer: 'Open het event en klik op de "Aanmelden" knop. Je ontvangt een bevestiging via email.',
-                                    },
-                                ].map((faq, i) => (
-                                    <details key={i} className="group">
-                                        <summary className="flex items-center justify-between cursor-pointer p-4 bg-light-200 rounded-lg hover:bg-light-300 transition-colors">
-                                            <span className="font-medium text-dark">{faq.question}</span>
-                                            <span className="text-primary group-open:rotate-180 transition-transform">
-                                                ▼
-                                            </span>
-                                        </summary>
-                                        <div className="p-4 text-dark-100">
-                                            {faq.answer}
-                                        </div>
-                                    </details>
-                                ))}
-                            </div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold text-dark">Veelgezochte onderwerpen</h2>
+                            <Link href="/support/docs" className="text-primary text-sm font-semibold hover:underline">
+                                Bekijk alles
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {commonTopics.map((topic) => (
+                                <Link
+                                    key={topic.title}
+                                    href={topic.href}
+                                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-light-300 hover:border-primary hover:shadow-sm transition-all group"
+                                >
+                                    <span className="font-medium text-dark group-hover:text-primary">{topic.title}</span>
+                                    <ExternalLink className="w-4 h-4 text-dark-100 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all" />
+                                </Link>
+                            ))}
                         </div>
 
-                        {/* Recent Tickets */}
-                        <div className="card p-6">
-                            <h2 className="text-xl font-semibold text-dark mb-4">
-                                Mijn Support Tickets
-                            </h2>
-                            <div className="space-y-3">
-                                {[
-                                    {
-                                        id: '#1234',
-                                        title: 'Probleem met notificaties',
-                                        status: 'Open',
-                                        date: '2 feb 2026',
-                                    },
-                                    {
-                                        id: '#1189',
-                                        title: 'Vraag over training certificaat',
-                                        status: 'Opgelost',
-                                        date: '28 jan 2026',
-                                    },
-                                ].map((ticket, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 bg-light-200 rounded-lg">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-sm font-mono text-dark-100">{ticket.id}</span>
-                                                <span className={`badge ${ticket.status === 'Open'
-                                                    ? 'bg-warning/20 text-warning'
-                                                    : 'bg-success/20 text-success'
-                                                    }`}>
-                                                    {ticket.status}
-                                                </span>
-                                            </div>
-                                            <p className="font-medium text-dark">{ticket.title}</p>
-                                            <p className="text-xs text-dark-100 mt-1">{ticket.date}</p>
-                                        </div>
-                                        <button className="text-primary hover:underline text-sm">
-                                            Bekijk →
-                                        </button>
-                                    </div>
-                                ))}
+                        {/* Recent Activity Placeholder (Future Feature) */}
+                        <div className="card p-6 mt-8 bg-blue-50 border-blue-100">
+                            <div className="flex items-start gap-4">
+                                <div className="bg-blue-100 p-2 rounded-full">
+                                    <Ticket className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-blue-900">Heb je een lopend ticket?</h3>
+                                    <p className="text-blue-700 text-sm mt-1">
+                                        Je kunt de status van je aanvragen volgen in het ticket overzicht.
+                                        We proberen binnen 24 uur te reageren.
+                                    </p>
+                                    <Link href="/support/tickets" className="inline-block mt-3 text-sm font-bold text-blue-700 hover:text-blue-900 underline">
+                                        Naar mijn tickets &rarr;
+                                    </Link>
+                                </div>
                             </div>
-                            <button className="btn btn-outline w-full mt-4">
-                                Alle tickets bekijken
-                            </button>
                         </div>
                     </div>
 
-                    {/* Sidebar */}
+                    {/* Contact Info */}
                     <div className="space-y-6">
-                        {/* Contact Info */}
                         <div className="card p-6">
-                            <h3 className="text-lg font-semibold text-dark mb-4">Contact</h3>
-                            <div className="space-y-3 text-sm">
+                            <h3 className="font-bold text-dark mb-4">Direct Contact</h3>
+                            <div className="space-y-4 text-sm">
                                 <div>
-                                    <p className="text-dark-100 mb-1">Email Support</p>
-                                    <a href="mailto:support@travelcounsellors.com" className="text-primary hover:underline">
-                                        support@travelcounsellors.com
-                                    </a>
+                                    <p className="text-dark-100 font-medium">IT Support</p>
+                                    <p className="text-primary font-bold">support@hubtc.com</p>
+                                    <p className="text-dark">Unavailable (09:00 - 17:00)</p>
                                 </div>
+                                <hr className="border-light-300" />
                                 <div>
-                                    <p className="text-dark-100 mb-1">Telefoon</p>
-                                    <a href="tel:+31201234567" className="text-primary hover:underline">
-                                        +31 20 123 4567
-                                    </a>
-                                </div>
-                                <div>
-                                    <p className="text-dark-100 mb-1">Openingstijden</p>
-                                    <p className="text-dark">Ma-Vr: 09:00 - 17:00</p>
+                                    <p className="text-dark-100 font-medium">Noodgevallen (24/7)</p>
+                                    <p className="text-error font-bold">+31 20 123 4567</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Popular Articles */}
-                        <div className="card p-6">
-                            <h3 className="text-lg font-semibold text-dark mb-4">
-                                Populaire Artikelen
-                            </h3>
-                            <div className="space-y-2">
-                                {[
-                                    'Aan de slag met HubTC',
-                                    'Notificaties instellen',
-                                    'Profiel aanpassen',
-                                    'Events organiseren',
-                                    'Polls aanmaken',
-                                ].map((article, i) => (
-                                    <a
-                                        key={i}
-                                        href="#"
-                                        className="block p-2 rounded-lg hover:bg-light-200 text-dark-100 hover:text-primary transition-colors text-sm"
-                                    >
-                                        {article}
-                                    </a>
-                                ))}
+                        <div className="card p-6 bg-dark text-white">
+                            <h3 className="font-bold mb-2">Systeem Status</h3>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="w-3 h-3 bg-success rounded-full animate-pulse"></span>
+                                <span className="text-sm font-medium">Alle systemen operationeel</span>
                             </div>
-                        </div>
-
-                        {/* System Status */}
-                        <div className="card p-6">
-                            <h3 className="text-lg font-semibold text-dark mb-4">
-                                Systeem Status
-                            </h3>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-3 h-3 bg-success rounded-full"></span>
-                                <span className="text-sm font-medium text-dark">Alle systemen operationeel</span>
-                            </div>
-                            <a href="/platform-status" className="text-sm text-primary hover:underline">
-                                Bekijk status pagina →
-                            </a>
+                            <Link href="/status" className="text-xs text-white/70 hover:text-white underline">
+                                Bekijk details
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -42,6 +42,9 @@ model User {
   notifications   Notification[]
   likes           PostLike[]
   trainingProgress UserTrainingProgress[]
+  tickets         SupportTicket[] @relation("UserTickets")
+  assignedTickets SupportTicket[] @relation("AssignedTickets")
+  ticketMessages  TicketMessage[]
 
   // Settings & Chat
   settings        UserSettings?
@@ -519,4 +522,43 @@ model UserTrainingProgress {
 
   @@unique([userId, lessonId])
   @@index([userId, courseId])
+}
+
+// ============================================
+// SUPPORT & TICKETS
+// ============================================
+
+model SupportTicket {
+  id            String    @id @default(cuid())
+  userId        String
+  subject       String
+  category      String    // TECHNICAL, HR, TRAVEL, OTHER
+  priority      String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status        String    @default("OPEN") // OPEN, IN_PROGRESS, WAITING_FOR_USER, RESOLVED, CLOSED
+  assignedToId  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+  assignedTo    User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  messages      TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model TicketMessage {
+  id            String    @id @default(cuid())
+  ticketId      String
+  senderId      String
+  content       String
+  attachmentUrl String?
+  isInternal    Boolean   @default(false) // For admin-only notes
+  createdAt     DateTime  @default(now())
+
+  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender        User          @relation(fields: [senderId], references: [id])
+
+  @@index([ticketId, createdAt])
 }
