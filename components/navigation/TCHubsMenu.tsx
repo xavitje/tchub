@@ -20,7 +20,9 @@ export function TCHubsMenu({ isMobile, onNavigate }: TCHubsMenuProps) {
         const fetchHubs = async () => {
             try {
                 // Add a timestamp to bypass local browser cache if needed
-                const res = await fetch(`/api/hubs?t=${Date.now()}`);
+                const res = await fetch(`/api/hubs?t=${Date.now()}`, {
+                    cache: 'no-store'
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setHubs(data);

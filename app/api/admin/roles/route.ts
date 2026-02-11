@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/roles - List all roles
 export async function GET() {
     try {
@@ -19,12 +21,18 @@ export async function GET() {
                 }
             },
             orderBy: { name: 'asc' }
+        }).catch(err => {
+            console.error('Prisma Error (findMany roles):', err);
+            return []; // Return empty array if collection doesn't exist yet
         });
 
         return NextResponse.json(roles);
     } catch (error) {
-        console.error('Error fetching roles:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Fatal Error fetching roles:', error);
+        return NextResponse.json({
+            error: 'Internal Server Error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 });
     }
 }
 

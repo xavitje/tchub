@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     // UI State
     const [activeTab, setActiveTab] = useState<Tab>('users');
     const [loading, setLoading] = useState(true);
+    const [isMigrating, setIsMigrating] = useState(false);
 
     // User Management State
     const [users, setUsers] = useState<any[]>([]);
@@ -369,6 +370,26 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleRunMigration = async () => {
+        if (!confirm('Dit herstelt alle rollen en rechten naar de standaardwaarden. Eventuele handmatige wijzigingen aan standaardrollen kunnen verloren gaan. Doorgaan?')) return;
+
+        setIsMigrating(true);
+        try {
+            const res = await fetch('/api/admin/migrate-rbac?secret=migrate_me_now_123', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                showNotification('success', `Systeem succesvol geïnitialiseerd: ${data.rolesCount} rollen en ${data.permissionsCount} rechten hersteld.`);
+                fetchData();
+            } else {
+                showNotification('error', 'Initialisatie mislukt');
+            }
+        } catch (error) {
+            showNotification('error', 'Netwerkfout bij initialisatie');
+        } finally {
+            setIsMigrating(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-light py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -376,6 +397,17 @@ export default function AdminDashboard() {
                     <div>
                         <h1 className="text-3xl font-bold text-dark">Admin Dashboard</h1>
                         <p className="text-dark-100">Beheer platform structuur, rollen en gebruikers</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleRunMigration}
+                            disabled={isMigrating}
+                            className="btn btn-outline border-warning text-warning hover:bg-warning/5 flex items-center gap-2"
+                            title="Herstel rollen en rechten naar standaardwaarden"
+                        >
+                            <AlertTriangle className={cn("w-4 h-4", isMigrating && "animate-spin")} />
+                            {isMigrating ? 'Initialiseren...' : 'Systeem Herstellen'}
+                        </button>
                     </div>
                 </div>
 
