@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { Search, Bell, User, LogOut, Settings, MessageSquare, Menu, X, Home, Shield } from 'lucide-react';
+import { Search, Bell, User, LogOut, Settings, MessageSquare, Menu, X, Home, Shield, Bookmark } from 'lucide-react';
 import { TCHubsMenu } from './TCHubsMenu';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
