@@ -328,17 +328,6 @@ export function Navbar() {
                                 >
                                     <User className="w-4 h-4" /> Profiel
                                 </Link>
-                                {(session.user as any)?.role !== 'ADMIN' && (
-                                    <button
-                                        onClick={async () => {
-                                            const res = await fetch('/api/admin/make-me-admin', { method: 'POST' });
-                                            if (res.ok) window.location.reload();
-                                        }}
-                                        className="flex items-center justify-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-xl text-primary hover:bg-primary/20 transition-colors shadow-sm font-bold"
-                                    >
-                                        Maak mij Admin (Tijdelijk)
-                                    </button>
-                                )}
                                 <button
                                     onClick={() => { setIsSidebarOpen(false); signOut(); }}
                                     className="flex items-center justify-center gap-2 p-3 bg-white border border-light-400 rounded-xl text-error hover:bg-error/5 transition-colors shadow-sm"

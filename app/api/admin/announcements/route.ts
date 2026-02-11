@@ -7,7 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const userRole = (session?.user as any)?.role;
+    const userPermissions = (session?.user as any)?.customRole?.permissions || [];
+
+    if (!session || (userRole !== 'ADMIN' && userRole !== 'HQ_ADMIN' && !userPermissions.includes('ACCESS_ADMIN'))) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     try {
         const announcements = await prisma.post.findMany({

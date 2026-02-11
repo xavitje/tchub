@@ -8,19 +8,12 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const userRole = (session?.user as any)?.role;
+        const userPermissions = (session?.user as any)?.customRole?.permissions || [];
 
-        // Check for MANAGE_HUBS permission or ADMIN/HQ_ADMIN role
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email! },
-            include: { customRole: { include: { permissions: true } } }
-        });
-
-        const hasPermission = user?.customRole?.permissions.some((p: any) => p.name === 'MANAGE_HUBS') ||
-            user?.role === 'ADMIN' ||
-            user?.role === 'HQ_ADMIN';
-
-        if (!hasPermission) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!session?.user || (userRole !== 'ADMIN' && userRole !== 'HQ_ADMIN' && !userPermissions.includes('ACCESS_ADMIN'))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         const hubs = await prisma.hub.findMany({
             orderBy: { order: 'asc' }
