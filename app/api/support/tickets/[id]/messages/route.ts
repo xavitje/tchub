@@ -42,24 +42,50 @@ export async function POST(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Create message
-        const message = await prisma.ticketMessage.create({
-            data: {
-                ticketId: params.id,
-                senderId: session.user.id,
-                content: content
-            },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        displayName: true,
-                        profileImage: true,
-                        role: true
-                    }
-                }
+        // Create message using raw query to avoid boolean conversion issues
+        const messageId = crypto.randomUUID();
+        const now = new Date();
+
+        await prisma.$executeRaw`
+            INSERT INTO TicketMessage (id, ticketId, senderId, content, isInternal, createdAt)
+            VALUES (${messageId}, ${params.id}, ${session.user.id}, ${content}, 0, ${now})
+        `;
+
+        // Fetch the created message with sender info
+        const messages: any[] = await prisma.$queryRaw`
+            SELECT 
+                m.id,
+                m.ticketId,
+                m.senderId,
+                m.content,
+                m.attachmentUrl,
+                m.isInternal,
+                m.createdAt,
+                u.id as sender_id,
+                u.displayName as sender_displayName,
+                u.profileImage as sender_profileImage,
+                u.role as sender_role
+            FROM TicketMessage m
+            LEFT JOIN User u ON m.senderId = u.id
+            WHERE m.id = ${messageId}
+        `;
+
+        const msg = messages[0];
+        const formattedMessage = {
+            id: msg.id,
+            ticketId: msg.ticketId,
+            senderId: msg.senderId,
+            content: msg.content,
+            attachmentUrl: msg.attachmentUrl,
+            isInternal: Boolean(msg.isInternal),
+            createdAt: msg.createdAt,
+            sender: {
+                id: msg.sender_id,
+                displayName: msg.sender_displayName,
+                profileImage: msg.sender_profileImage,
+                role: msg.sender_role
             }
-        });
+        };
 
         // Auto-update status based on who replied
         let newStatus = ticket.status;
@@ -78,7 +104,7 @@ export async function POST(
             }
         });
 
-        return NextResponse.json(message);
+        return NextResponse.json(formattedMessage);
     } catch (error) {
         console.error('Error creating message:', error);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
