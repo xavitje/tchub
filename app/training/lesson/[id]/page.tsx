@@ -152,13 +152,52 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                             <h1 className="text-3xl font-bold text-dark mb-6">{lesson.title}</h1>
 
                             {lesson.videoUrl && (
-                                <div className="aspect-video bg-dark rounded-xl mb-8 flex items-center justify-center text-white">
-                                    <p className="text-dark-100">Video Player Placeholder: {lesson.videoUrl}</p>
+                                <div className="aspect-video bg-dark rounded-xl mb-8 overflow-hidden">
+                                    {lesson.videoUrl.includes('youtube.com') || lesson.videoUrl.includes('youtu.be') ? (
+                                        <iframe
+                                            className="w-full h-full"
+                                            src={lesson.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : lesson.videoUrl.includes('vimeo.com') ? (
+                                        <iframe
+                                            className="w-full h-full"
+                                            src={lesson.videoUrl.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                                            frameBorder="0"
+                                            allow="autoplay; fullscreen; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <video className="w-full h-full" controls>
+                                            <source src={lesson.videoUrl} />
+                                        </video>
+                                    )}
                                 </div>
                             )}
 
-                            <div className="prose max-w-none text-dark-100 whitespace-pre-line leading-relaxed mb-8">
-                                {lesson.content}
+                            <div className="prose max-w-none text-dark-100 leading-relaxed mb-8">
+                                {lesson.content?.split('\n').map((line: string, idx: number) => {
+                                    // Check if line is an image URL
+                                    if (line.trim().match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+                                        return (
+                                            <div key={idx} className="my-4">
+                                                <img
+                                                    src={line.trim()}
+                                                    alt="Lesson content"
+                                                    className="rounded-lg max-w-full h-auto shadow-md"
+                                                />
+                                            </div>
+                                        );
+                                    }
+                                    // Regular text line
+                                    return line.trim() ? (
+                                        <p key={idx} className="mb-4">{line}</p>
+                                    ) : (
+                                        <br key={idx} />
+                                    );
+                                })}
                             </div>
 
                             {/* QUIZ SECTION */}
@@ -185,8 +224,8 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                                                         key={idx}
                                                         onClick={() => setSelectedOption(idx)}
                                                         className={`w-full text-left p-3 rounded-lg border transition-all ${selectedOption === idx
-                                                                ? 'border-primary bg-primary/10 text-primary font-bold'
-                                                                : 'border-light-300 hover:bg-white hover:border-primary/50'
+                                                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                                                            : 'border-light-300 hover:bg-white hover:border-primary/50'
                                                             }`}
                                                     >
                                                         {opt}

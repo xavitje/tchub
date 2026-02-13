@@ -295,12 +295,21 @@ function CourseDetailContent({ params }: { params: { id: string } }) {
                                                     </div>
                                                     <div className="flex items-center gap-4">
                                                         <span className="text-xs text-dark-100">{lesson.duration || '5'} min</span>
-                                                        <Link
-                                                            href={`/training/lesson/${lesson.id}`}
-                                                            className={`p-2 rounded-full transition-colors ${isLessonCompleted ? 'text-success hover:bg-success/10' : 'text-primary hover:bg-primary/10'}`}
-                                                        >
-                                                            <Play className="w-4 h-4" />
-                                                        </Link>
+                                                        {isEditing ? (
+                                                            <Link
+                                                                href={`/training/lesson-builder?lessonId=${lesson.id}`}
+                                                                className="btn btn-xs btn-ghost text-primary"
+                                                            >
+                                                                <Edit2 className="w-3 h-3" />
+                                                            </Link>
+                                                        ) : (
+                                                            <Link
+                                                                href={`/training/lesson/${lesson.id}`}
+                                                                className={`p-2 rounded-full transition-colors ${isLessonCompleted ? 'text-success hover:bg-success/10' : 'text-primary hover:bg-primary/10'}`}
+                                                            >
+                                                                <Play className="w-4 h-4" />
+                                                            </Link>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
