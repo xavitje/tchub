@@ -95,7 +95,8 @@ export async function POST(
 
             // Create questions and options
             if (questions && Array.isArray(questions)) {
-                for (const [qIndex, q] of questions.entries()) {
+                for (let qIndex = 0; qIndex < questions.length; qIndex++) {
+                    const q = questions[qIndex];
                     await tx.quizQuestion.create({
                         data: {
                             quizId: quiz.id,
