@@ -128,7 +128,7 @@ function LessonBuilderContent() {
     return (
         <div className="min-h-screen bg-light">
             <div className="max-w-5xl mx-auto px-4 py-8">
-                <Link href={`/training/${module.courseId}`} className="flex items-center gap-2 text-dark-100 hover:text-primary mb-8">
+                <Link href={`/training/${module.courseId}?edit=true`} className="flex items-center gap-2 text-dark-100 hover:text-primary mb-8">
                     <ArrowLeft className="w-4 h-4" />
                     Terug naar cursus
                 </Link>

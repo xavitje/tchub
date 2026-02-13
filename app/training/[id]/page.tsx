@@ -214,12 +214,12 @@ function CourseDetailContent({ params }: { params: { id: string } }) {
                         </div>
 
                         {course.modules?.map((module: any, idx: number) => (
-                            <div key={module.id} className="card overflow-hidden">
-                                <button
-                                    onClick={() => toggleModule(module.id)}
-                                    className="w-full flex items-center justify-between p-4 bg-white hover:bg-light-50 transition-colors"
-                                >
-                                    <div className="flex items-center gap-4 text-left flex-1">
+                            <div key={module.id} className="card overflow-hidden group">
+                                <div className="w-full flex items-center justify-between p-4 bg-white hover:bg-light-50 transition-colors">
+                                    <div
+                                        onClick={() => toggleModule(module.id)}
+                                        className="flex items-center gap-4 text-left flex-1 cursor-pointer"
+                                    >
                                         <div className="w-8 h-8 rounded-full bg-light-200 flex items-center justify-center font-bold text-dark text-sm">
                                             {idx + 1}
                                         </div>
@@ -250,27 +250,29 @@ function CourseDetailContent({ params }: { params: { id: string } }) {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-2 flex-1">
+                                            <div className="flex items-center gap-2">
                                                 <h3 className="font-bold text-dark">{module.title}</h3>
-                                                {isEditing && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleEditModule(module.id, module.title);
-                                                        }}
-                                                        className="btn btn-xs btn-ghost text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <Edit2 className="w-3 h-3" />
-                                                    </button>
-                                                )}
                                             </div>
                                         )}
                                         <p className="text-xs text-dark-100">{module.lessons?.length || 0} lessen</p>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        {expandedModules[module.id] ? <ChevronUp className="w-5 h-5 text-dark-100" /> : <ChevronDown className="w-5 h-5 text-dark-100" />}
+                                    <div className="flex items-center gap-2">
+                                        {isEditing && editingModuleId !== module.id && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditModule(module.id, module.title);
+                                                }}
+                                                className="btn btn-sm btn-ghost text-primary"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        <button onClick={() => toggleModule(module.id)} className="p-2">
+                                            {expandedModules[module.id] ? <ChevronUp className="w-5 h-5 text-dark-100" /> : <ChevronDown className="w-5 h-5 text-dark-100" />}
+                                        </button>
                                     </div>
-                                </button>
+                                </div>
 
                                 {expandedModules[module.id] && (
                                     <div className="border-t border-light-300 divide-y divide-light-300">
