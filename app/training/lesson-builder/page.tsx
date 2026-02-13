@@ -11,6 +11,7 @@ function LessonBuilderContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const moduleId = searchParams.get('moduleId');
+    const lessonId = searchParams.get('lessonId');
     const canAccessAdmin = (session?.user as any)?.customRole?.permissions?.includes('ACCESS_ADMIN') || (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'HQ_ADMIN';
 
     const [module, setModule] = useState<any>(null);
@@ -23,18 +24,57 @@ function LessonBuilderContent() {
     const [correctAnswer, setCorrectAnswer] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!canAccessAdmin) {
             router.push('/training');
             return;
         }
-        if (!moduleId) {
+        if (lessonId) {
+            fetchLesson();
+        } else if (moduleId) {
+            fetchModule();
+        } else {
             router.push('/training');
-            return;
         }
-        fetchModule();
-    }, [moduleId]);
+    }, [moduleId, lessonId]);
+
+    async function fetchLesson() {
+        try {
+            const res = await fetch(`/api/training/lessons/${lessonId}`);
+            if (res.ok) {
+                const lesson = await res.json();
+                setTitle(lesson.title);
+                setContent(lesson.content || '');
+                setVideoUrl(lesson.videoUrl || '');
+                setDuration(lesson.duration ? lesson.duration.toString() : '');
+
+                // Parse quiz if exists
+                if (lesson.quiz) {
+                    try {
+                        const quizData = JSON.parse(lesson.quiz);
+                        setQuizQuestion(quizData.question || '');
+                        setQuizOptions(quizData.options || ['', '', '', '']);
+                        setCorrectAnswer(quizData.correct || 0);
+                    } catch (e) {
+                        console.error('Failed to parse quiz', e);
+                    }
+                }
+
+                // Fetch module data
+                const moduleRes = await fetch(`/api/training/modules/${lesson.moduleId}`);
+                if (moduleRes.ok) {
+                    const moduleData = await moduleRes.json();
+                    setModule(moduleData);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     async function fetchModule() {
         try {
@@ -45,6 +85,8 @@ function LessonBuilderContent() {
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -88,11 +130,14 @@ function LessonBuilderContent() {
                 });
             }
 
-            const res = await fetch('/api/training/lessons', {
-                method: 'POST',
+            const method = lessonId ? 'PATCH' : 'POST';
+            const url = lessonId ? `/api/training/lessons/${lessonId}` : '/api/training/lessons';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    moduleId,
+                    moduleId: moduleId || module.id,
                     title,
                     content: content || null,
                     videoUrl: videoUrl || null,
@@ -117,7 +162,7 @@ function LessonBuilderContent() {
         }
     };
 
-    if (!module) {
+    if (isLoading || !module) {
         return (
             <div className="min-h-screen bg-light flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -134,7 +179,7 @@ function LessonBuilderContent() {
                 </Link>
 
                 <div className="card p-8">
-                    <h1 className="text-3xl font-bold text-dark mb-2">Nieuwe Les Maken</h1>
+                    <h1 className="text-3xl font-bold text-dark mb-2">{lessonId ? 'Les Bewerken' : 'Nieuwe Les Maken'}</h1>
                     <p className="text-dark-100 mb-8">Module: <strong>{module.title}</strong></p>
 
                     {error && (
