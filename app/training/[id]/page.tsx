@@ -19,6 +19,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     const [isEditing, setIsEditing] = useState(false);
     const [showAddModule, setShowAddModule] = useState(false);
     const [newModuleTitle, setNewModuleTitle] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const canAccessAdmin = (session?.user as any)?.customRole?.permissions?.includes('ACCESS_ADMIN') || (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'HQ_ADMIN';
 
@@ -77,15 +78,32 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     const handleAddModule = async () => {
         if (!newModuleTitle) return;
         try {
-            const res = await fetch(`/api/training/${params.id}/modules`, {
+            const res = await fetch(`/api/training/modules`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: newModuleTitle, order: course.modules.length }),
+                body: JSON.stringify({
+                    courseId: params.id,
+                    title: newModuleTitle,
+                    order: course.modules.length
+                }),
             });
             if (res.ok) {
                 setNewModuleTitle('');
                 setShowAddModule(false);
                 fetchCourse();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleDeleteCourse = async () => {
+        try {
+            const res = await fetch(`/api/training/${params.id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                router.push('/training');
             }
         } catch (error) {
             console.error(error);
@@ -131,13 +149,23 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                 </div>
                             </div>
                             {canAccessAdmin && (
-                                <button
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    className="btn btn-outline flex items-center gap-2"
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                    {isEditing ? 'Stoppen met bewerken' : 'Bewerk Modules'}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setIsEditing(!isEditing)}
+                                        className="btn btn-outline flex items-center gap-2"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                        {isEditing ? 'Stoppen met bewerken' : 'Bewerk Modules'}
+                                    </button>
+                                    {isEditing && (
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            className="btn btn-outline border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                                        >
+                                            Verwijder Training
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -292,6 +320,39 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                             </div>
                         )}
 
+                        {isEditing && showAddModule && (
+                            <div className="card p-6">
+                                <h3 className="text-lg font-bold text-dark mb-4">Nieuwe Module Toevoegen</h3>
+                                <input
+                                    type="text"
+                                    value={newModuleTitle}
+                                    onChange={(e) => setNewModuleTitle(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddModule()}
+                                    placeholder="Module titel"
+                                    className="input input-bordered w-full mb-4"
+                                    autoFocus
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleAddModule}
+                                        disabled={!newModuleTitle}
+                                        className="btn btn-primary flex-1"
+                                    >
+                                        Toevoegen
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddModule(false);
+                                            setNewModuleTitle('');
+                                        }}
+                                        className="btn btn-ghost"
+                                    >
+                                        Annuleren
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {isEditing && !showAddModule && (
                             <button
                                 onClick={() => setShowAddModule(true)}
@@ -366,6 +427,33 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                     </div>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="card max-w-md w-full mx-4 p-6">
+                        <h3 className="text-xl font-bold text-dark mb-4">Training Verwijderen?</h3>
+                        <p className="text-dark-100 mb-6">
+                            Weet je zeker dat je <strong>{course.title}</strong> wilt verwijderen?
+                            Dit verwijdert ook alle modules, lessen en voortgang. Deze actie kan niet ongedaan gemaakt worden.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="btn btn-ghost flex-1"
+                            >
+                                Annuleren
+                            </button>
+                            <button
+                                onClick={handleDeleteCourse}
+                                className="btn bg-red-600 hover:bg-red-700 text-white border-0 flex-1"
+                            >
+                                Verwijderen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
