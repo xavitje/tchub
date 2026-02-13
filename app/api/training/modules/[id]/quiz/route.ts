@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // GET Quiz for a module
 export async function GET(
     request: Request,
-    { params }: { params: { moduleId: string } }
+    { params }: { params: { id: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -15,7 +15,7 @@ export async function GET(
         }
 
         const quiz = await prisma.quiz.findUnique({
-            where: { moduleId: params.moduleId },
+            where: { moduleId: params.id },
             include: {
                 questions: {
                     include: { options: true },
@@ -37,7 +37,7 @@ export async function GET(
 // CREATE/UPDATE Quiz for a module
 export async function POST(
     request: Request,
-    { params }: { params: { moduleId: string } }
+    { params }: { params: { id: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -63,7 +63,7 @@ export async function POST(
         const result = await prisma.$transaction(async (tx) => {
             // Check if quiz exists
             let quiz = await tx.quiz.findUnique({
-                where: { moduleId: params.moduleId }
+                where: { moduleId: params.id }
             });
 
             if (quiz) {
@@ -85,7 +85,7 @@ export async function POST(
                 // Create new quiz
                 quiz = await tx.quiz.create({
                     data: {
-                        moduleId: params.moduleId,
+                        moduleId: params.id,
                         title,
                         description,
                         passingScore
