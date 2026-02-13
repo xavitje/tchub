@@ -42,6 +42,8 @@ model User {
   notifications   Notification[]
   likes           PostLike[]
   trainingProgress UserTrainingProgress[]
+  quizAttempts    QuizAttempt[]
+  certificates    Certificate[]
   tickets         SupportTicket[] @relation("UserTickets")
   assignedTickets SupportTicket[] @relation("AssignedTickets")
   ticketMessages  TicketMessage[]
