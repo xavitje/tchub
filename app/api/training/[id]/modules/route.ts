@@ -9,27 +9,47 @@ export async function POST(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        const canAccessAdmin = (session?.user as any)?.customRole?.permissions?.includes('ACCESS_ADMIN') || (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'HQ_ADMIN';
+        // Admin check
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session?.user?.id },
+            include: { customRole: true }
+        });
 
-        if (!canAccessAdmin) {
+        const isAdmin = currentUser?.role === 'ADMIN' ||
+            currentUser?.role === 'HQ_ADMIN' ||
+            currentUser?.customRole?.name === 'Admin';
+
+        if (!session?.user?.id || !isAdmin) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
-        const { title, description, order } = body;
+        const { title, description } = body;
+
+        if (!title) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+        }
+
+        // Get highest order
+        const lastModule = await prisma.trainingModule.findFirst({
+            where: { courseId: params.id },
+            orderBy: { order: 'desc' }
+        });
+
+        const newOrder = (lastModule?.order ?? -1) + 1;
 
         const module = await prisma.trainingModule.create({
             data: {
                 courseId: params.id,
                 title,
                 description,
-                order: order || 0
+                order: newOrder
             }
         });
 
         return NextResponse.json(module);
     } catch (error) {
         console.error('Error creating module:', error);
-        return NextResponse.json({ error: 'Failed to create module' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }
