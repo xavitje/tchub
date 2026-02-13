@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, Clock, Award, CheckCircle2, Play, Circle, Plus, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Clock, Award, CheckCircle2, Play, Circle, Plus, Edit2, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
 import Link from 'next/link';
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
+function CourseDetailContent({ params }: { params: { id: string } }) {
     const { data: session } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const editFromUrl = searchParams.get('edit') === 'true';
     const [course, setCourse] = useState<any>(null);
     const [progress, setProgress] = useState<any[]>([]);
     const [certificate, setCertificate] = useState<any>(null);
@@ -16,10 +18,12 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
     // Admin state
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(editFromUrl);
     const [showAddModule, setShowAddModule] = useState(false);
     const [newModuleTitle, setNewModuleTitle] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+    const [editModuleTitle, setEditModuleTitle] = useState('');
 
     const canAccessAdmin = (session?.user as any)?.customRole?.permissions?.includes('ACCESS_ADMIN') || (session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'HQ_ADMIN';
 
@@ -110,6 +114,34 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
         }
     };
 
+    const handleEditModule = (moduleId: string, currentTitle: string) => {
+        setEditingModuleId(moduleId);
+        setEditModuleTitle(currentTitle);
+    };
+
+    const handleSaveModuleEdit = async (moduleId: string) => {
+        if (!editModuleTitle) return;
+        try {
+            const res = await fetch(`/api/training/modules/${moduleId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editModuleTitle }),
+            });
+            if (res.ok) {
+                setEditingModuleId(null);
+                setEditModuleTitle('');
+                fetchCourse();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleCancelModuleEdit = () => {
+        setEditingModuleId(null);
+        setEditModuleTitle('');
+    };
+
     if (loading) return <div className="min-h-screen bg-light flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
     if (!course) return <div className="min-h-screen bg-light flex flex-col items-center justify-center gap-4 text-dark-100"><ArrowLeft className="w-12 h-12 opacity-20" /><p>Training niet gevonden.</p></div>;
 
@@ -187,14 +219,53 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                     onClick={() => toggleModule(module.id)}
                                     className="w-full flex items-center justify-between p-4 bg-white hover:bg-light-50 transition-colors"
                                 >
-                                    <div className="flex items-center gap-4 text-left">
+                                    <div className="flex items-center gap-4 text-left flex-1">
                                         <div className="w-8 h-8 rounded-full bg-light-200 flex items-center justify-center font-bold text-dark text-sm">
                                             {idx + 1}
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-dark">{module.title}</h3>
-                                            <p className="text-xs text-dark-100">{module.lessons?.length || 0} lessen</p>
-                                        </div>
+                                        {editingModuleId === module.id ? (
+                                            <div className="flex items-center gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
+                                                <input
+                                                    type="text"
+                                                    value={editModuleTitle}
+                                                    onChange={(e) => setEditModuleTitle(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleSaveModuleEdit(module.id);
+                                                        if (e.key === 'Escape') handleCancelModuleEdit();
+                                                    }}
+                                                    className="input input-sm input-bordered flex-1"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    onClick={() => handleSaveModuleEdit(module.id)}
+                                                    className="btn btn-sm btn-circle btn-primary"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelModuleEdit}
+                                                    className="btn btn-sm btn-circle btn-ghost"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <h3 className="font-bold text-dark">{module.title}</h3>
+                                                {isEditing && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleEditModule(module.id, module.title);
+                                                        }}
+                                                        className="btn btn-xs btn-ghost text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <Edit2 className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-dark-100">{module.lessons?.length || 0} lessen</p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         {expandedModules[module.id] ? <ChevronUp className="w-5 h-5 text-dark-100" /> : <ChevronDown className="w-5 h-5 text-dark-100" />}
@@ -458,5 +529,17 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                 </div>
             )}
         </div>
+    );
+}
+
+export default function CourseDetailPage({ params }: { params: { id: string } }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-light flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <CourseDetailContent params={params} />
+        </Suspense>
     );
 }

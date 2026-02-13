@@ -104,7 +104,7 @@ function LessonBuilderContent() {
 
             if (res.ok) {
                 const lesson = await res.json();
-                router.push(`/training/${module.courseId}`);
+                router.push(`/training/${module.courseId}?edit=true`);
             } else {
                 const data = await res.json();
                 setError(data.error || 'Fout bij opslaan');
