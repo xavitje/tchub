@@ -56,7 +56,7 @@ export async function POST(
         const body = await request.json();
         const { title, description, passingScore, questions } = body;
 
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
             let quiz = await tx.quiz.findUnique({
                 where: { courseId: params.id }
             });

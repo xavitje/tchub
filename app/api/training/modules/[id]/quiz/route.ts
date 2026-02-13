@@ -60,7 +60,7 @@ export async function POST(
         const { title, description, passingScore, questions } = body;
 
         // Transaction to handle quiz creation/update and questions/options
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
             // Check if quiz exists
             let quiz = await tx.quiz.findUnique({
                 where: { moduleId: params.id }
