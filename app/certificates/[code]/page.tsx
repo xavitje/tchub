@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+
 import { CheckCircle2, Download, Printer } from 'lucide-react';
 
 export default function CertificatePage({ params }: { params: { code: string } }) {
