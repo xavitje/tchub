@@ -34,9 +34,10 @@ export async function POST(
         let totalQuestions = quiz.questions.length;
 
         // Calculate score
-        quiz.questions.forEach(q => {
+        // Calculate score
+        quiz.questions.forEach((q: any) => {
             const userAnswerId = answers[q.id];
-            const correctOption = q.options.find(o => o.isCorrect);
+            const correctOption = q.options.find((o: any) => o.isCorrect);
 
             if (correctOption && userAnswerId === correctOption.id) {
                 correctCount++;
