@@ -45,10 +45,17 @@ export async function GET(
             return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
         }
 
+        // Fetch user with role to check permissions
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            include: { customRole: true }
+        });
+
         // Only allow owner or admin/support to view
         const canAccess = ticket.userId === session.user.id ||
-            (session.user as any).role === 'ADMIN' ||
-            (session.user as any).role === 'HQ_ADMIN';
+            currentUser?.role === 'ADMIN' ||
+            currentUser?.role === 'HQ_ADMIN' ||
+            currentUser?.customRole?.name === 'Admin';
 
         if (!canAccess) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

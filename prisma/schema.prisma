@@ -472,6 +472,8 @@ model TrainingCourse {
 
   modules       TrainingModule[]
   progress      UserTrainingProgress[]
+  finalExam     Quiz?             @relation("CourseFinalExam")
+  certificates  Certificate[]
 }
 
 model TrainingModule {
@@ -485,6 +487,7 @@ model TrainingModule {
 
   course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons       TrainingLesson[]
+  quiz          Quiz?          @relation("ModuleQuiz")
 
   @@index([courseId, order])
 }
@@ -522,6 +525,84 @@ model UserTrainingProgress {
 
   @@unique([userId, lessonId])
   @@index([userId, courseId])
+}
+
+model Quiz {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  passingScore  Int       @default(60) // Percentage required to pass
+  
+  // Relations - A quiz can belong to a module OR be a final exam for a course
+  moduleId      String?   @unique
+  module        TrainingModule? @relation("ModuleQuiz", fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  courseId      String?   @unique
+  course        TrainingCourse? @relation("CourseFinalExam", fields: [courseId], references: [id], onDelete: Cascade)
+
+  questions     QuizQuestion[]
+  attempts      QuizAttempt[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model QuizQuestion {
+  id            String    @id @default(cuid())
+  quizId        String
+  text          String
+  type          String    @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE, TRUE_FALSE
+  order         Int       @default(0)
+  
+  quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options       QuizOption[]
+  
+  @@index([quizId])
+}
+
+model QuizOption {
+  id            String    @id @default(cuid())
+  questionId    String
+  text          String
+  isCorrect     Boolean   @default(false)
+  order         Int       @default(0)
+
+  question      QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id            String    @id @default(cuid())
+  quizId        String
+  userId        String
+  score         Int       // Percentage score
+  passed        Boolean   @default(false)
+  answers       String?   // JSON string of answers given (optional, for review)
+  createdAt     DateTime  @default(now())
+
+  quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, quizId])
+}
+
+model Certificate {
+  id            String    @id @default(cuid())
+  userId        String
+  courseId      String
+  
+  // Metadata at time of issuance
+  userName      String 
+  courseTitle   String
+  issuedAt      DateTime  @default(now())
+  code          String    @unique // Unique certificate code for verification
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
 }
 
 // ============================================

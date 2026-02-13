@@ -20,11 +20,26 @@ export async function POST(
         }
 
         const ticket = await prisma.supportTicket.findUnique({
-            where: { id: params.id }
+            where: { id: params.id },
+            include: { user: true }
         });
 
         if (!ticket) {
             return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+        }
+
+        // Check permissions
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            include: { customRole: true }
+        });
+
+        const isAdmin = currentUser?.role === 'ADMIN' ||
+            currentUser?.role === 'HQ_ADMIN' ||
+            currentUser?.customRole?.name === 'Admin';
+
+        if (ticket.userId !== session.user.id && !isAdmin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         // Create message
@@ -46,12 +61,21 @@ export async function POST(
             }
         });
 
-        // Update ticket status if needed (e.g. from WAITING back to OPEN if user replies)
-        // If admin replies, could set to WAITING_FOR_USER
-        // For simple logic, we just bump updatedAt
+        // Auto-update status based on who replied
+        let newStatus = ticket.status;
+        if (isAdmin && ticket.userId !== session.user.id) {
+            newStatus = 'WAITING_FOR_USER';
+        } else if (ticket.userId === session.user.id) {
+            newStatus = 'OPEN';
+        }
+
+        // If status changed, update it. Always update updatedAt.
         await prisma.supportTicket.update({
-            where: { id: params.id },
-            data: { updatedAt: new Date() }
+            where: { id: ticket.id },
+            data: {
+                status: newStatus,
+                updatedAt: new Date()
+            }
         });
 
         return NextResponse.json(message);

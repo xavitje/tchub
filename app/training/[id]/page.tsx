@@ -11,6 +11,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     const router = useRouter();
     const [course, setCourse] = useState<any>(null);
     const [progress, setProgress] = useState<any[]>([]);
+    const [certificate, setCertificate] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
@@ -24,6 +25,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     useEffect(() => {
         fetchCourse();
         fetchProgress();
+        fetchCertificate();
     }, [params.id]);
 
     async function fetchCourse() {
@@ -46,6 +48,18 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             const res = await fetch(`/api/training/progress?courseId=${params.id}`);
             const data = await res.json();
             setProgress(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function fetchCertificate() {
+        try {
+            const res = await fetch(`/api/training/${params.id}/certificate`);
+            if (res.ok) {
+                const data = await res.json();
+                setCertificate(data);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -195,10 +209,88 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                                 <Plus className="w-4 h-4" /> Les Toevoegen
                                             </button>
                                         )}
+
+                                        {/* Module Quiz Section */}
+                                        <div className="p-4 bg-light-50 border-t border-light-300">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${module.quiz ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <CheckCircle2 className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm font-bold text-dark">Module Quiz</span>
+                                                        {!module.quiz && <p className="text-xs text-dark-100">Geen quiz beschikbaar</p>}
+                                                    </div>
+                                                </div>
+
+                                                {isEditing ? (
+                                                    <Link
+                                                        href={`/training/quiz-builder?moduleId=${module.id}`}
+                                                        className="btn btn-sm btn-ghost text-primary"
+                                                    >
+                                                        {module.quiz ? 'Quiz Bewerken' : 'Quiz Toevoegen'}
+                                                    </Link>
+                                                ) : module.quiz && (
+                                                    <Link
+                                                        href={`/training/quiz/${module.quiz.id}`}
+                                                        className="btn btn-sm btn-outline border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+                                                    >
+                                                        Start Quiz
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         ))}
+
+                        {/* Final Exam Section */}
+                        {(course.finalExam || isEditing) && (
+                            <div className="card overflow-hidden border-2 border-primary/20">
+                                <div className="p-4 bg-primary/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                            <Award className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-dark">Eindexamen</h3>
+                                            <p className="text-xs text-dark-100">
+                                                {course.finalExam ? 'Toets je kennis' : 'Nog geen examen'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Admin Actions */}
+                                    {isEditing && (
+                                        <Link
+                                            href={`/training/quiz-builder?courseId=${course.id}`}
+                                            className="btn btn-sm btn-outline flex items-center gap-2"
+                                        >
+                                            <Edit2 className="w-3 h-3" />
+                                            {course.finalExam ? 'Bewerken' : 'Aanmaken'}
+                                        </Link>
+                                    )}
+
+                                    {/* User Actions */}
+                                    {!isEditing && course.finalExam && (
+                                        certificate ? (
+                                            <div className="flex items-center gap-2 text-success font-bold bg-white px-4 py-2 rounded-lg">
+                                                <CheckCircle2 className="w-5 h-5" />
+                                                Behaald
+                                            </div>
+                                        ) : (
+                                            <Link
+                                                href={`/training/quiz/${course.finalExam.id}`}
+                                                className="btn btn-primary"
+                                            >
+                                                Start Examen
+                                            </Link>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {isEditing && !showAddModule && (
                             <button
@@ -222,13 +314,27 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                 <div className="w-full bg-white/20 rounded-full h-2">
                                     <div className="bg-white h-2 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }}></div>
                                 </div>
-                                {isFullyCompleted ? (
+                                {certificate ? (
                                     <Link
-                                        href={`/training/certificate/${course.id}`}
+                                        href={`/certificates/${certificate.code}`}
                                         className="w-full btn bg-white text-success hover:bg-white/90 border-0 font-bold mt-4 flex items-center justify-center gap-2"
                                     >
                                         <Award className="w-5 h-5" /> Bekijk Certificaat
                                     </Link>
+                                ) : isFullyCompleted ? (
+                                    <div className="mt-4 text-center">
+                                        <div className="text-white/80 text-sm mb-2">Alle lessen voltooid!</div>
+                                        {course.finalExam ? (
+                                            <Link
+                                                href={`/training/quiz/${course.finalExam.id}`}
+                                                className="w-full btn bg-white text-primary hover:bg-white/90 border-0 font-bold"
+                                            >
+                                                Start Eindexamen
+                                            </Link>
+                                        ) : (
+                                            <div className="font-bold">Training Afgerond</div>
+                                        )}
+                                    </div>
                                 ) : (
                                     <button
                                         onClick={() => {

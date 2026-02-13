@@ -13,12 +13,12 @@ export async function GET(
             include: {
                 modules: {
                     include: {
-                        lessons: {
-                            orderBy: { order: 'asc' }
-                        }
+                        lessons: { orderBy: { order: 'asc' } },
+                        quiz: { select: { id: true, title: true } }
                     },
                     orderBy: { order: 'asc' }
-                }
+                },
+                finalExam: { select: { id: true, title: true } }
             }
         });
 
