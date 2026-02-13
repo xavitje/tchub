@@ -68,22 +68,28 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+    console.log('--- GET /api/support/tickets START ---');
     try {
         const session = await getServerSession(authOptions);
+        console.log('Session user:', session?.user?.id);
+
         if (!session?.user?.id) {
+            console.error('Unauthorized: No session user');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         // Check if user is Admin
-        // Adjust this check based on your actual Role implementation
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
             include: { customRole: true }
         });
+        console.log('User fetched:', user ? 'Yes' : 'No', 'Role:', user?.role);
 
         const isAdmin = user?.role === 'ADMIN' || user?.role === 'HQ_ADMIN' || user?.customRole?.name === 'Admin';
+        console.log('Is Admin:', isAdmin);
 
         const whereClause = isAdmin ? {} : { userId: session.user.id };
+        console.log('Where clause:', JSON.stringify(whereClause));
 
         const tickets = await prisma.supportTicket.findMany({
             where: whereClause,
@@ -104,9 +110,13 @@ export async function GET(request: Request) {
             }
         });
 
+        console.log(`Found ${tickets.length} tickets`);
         return NextResponse.json(tickets);
-    } catch (error) {
-        console.error('Error fetching tickets:', error);
-        return NextResponse.json({ error: 'Failed to fetch tickets' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Error fetching tickets FULL ERROR:', error);
+        return NextResponse.json({
+            error: 'Failed to fetch tickets',
+            details: error.message
+        }, { status: 500 });
     }
 }

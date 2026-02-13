@@ -7,6 +7,7 @@ export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    console.log('--- GET /api/training/[id] START ---', params.id);
     try {
         const course = await prisma.trainingCourse.findUnique({
             where: { id: params.id },
@@ -23,13 +24,18 @@ export async function GET(
         });
 
         if (!course) {
+            console.warn('Course not found:', params.id);
             return NextResponse.json({ error: 'Course not found' }, { status: 404 });
         }
 
+        console.log('Course fetched successfully');
         return NextResponse.json(course);
-    } catch (error) {
-        console.error('Error fetching course:', error);
-        return NextResponse.json({ error: 'Failed to fetch course' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Error fetching course FULL ERROR:', error);
+        return NextResponse.json({
+            error: 'Failed to fetch course',
+            details: error.message
+        }, { status: 500 });
     }
 }
 
