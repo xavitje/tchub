@@ -233,9 +233,12 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                                             );
                                         })}
                                         {isEditing && (
-                                            <button className="w-full p-4 text-sm text-primary hover:bg-primary/5 flex items-center justify-center gap-2 font-bold transition-all">
+                                            <Link
+                                                href={`/training/lesson-builder?moduleId=${module.id}`}
+                                                className="w-full p-4 text-sm text-primary hover:bg-primary/5 flex items-center justify-center gap-2 font-bold transition-all"
+                                            >
                                                 <Plus className="w-4 h-4" /> Les Toevoegen
-                                            </button>
+                                            </Link>
                                         )}
 
                                         {/* Module Quiz Section */}
