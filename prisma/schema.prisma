@@ -51,7 +51,7 @@ model User {
   // Settings & Chat
   settings        UserSettings?
   quickLinks      QuickLink[]      @relation("QuickLinks")
-  conversations   Conversation[] 
+  conversations   Conversation[]
   messages        Message[]
 
   // Chat Extras
@@ -74,7 +74,7 @@ model Permission {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  roles       Role[]   
+  roles       Role[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -122,7 +122,7 @@ model Conversation {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  users           User[]    
+  users           User[]
 
   messages        Message[]
 
@@ -152,7 +152,7 @@ model Message {
   reactions       Reaction[]
   reads           MessageRead[]
 
-  replyToId      String?  
+  replyToId      String?
   replyTo        Message? @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies        Message[] @relation("ReplyTo")
 
@@ -218,10 +218,10 @@ model Post {
   title           String
   content         String
   imageUrl        String?
-  authorId        String      
+  authorId        String
   isPinned        Boolean     @default(false)
   pinnedAt        DateTime?
-  pinnedById      String?     
+  pinnedById      String?
   viewCount       Int         @default(0)
   likeCount       Int         @default(0)
   commentCount    Int         @default(0)
@@ -239,7 +239,7 @@ model Post {
   author          User        @relation("UserPosts", fields: [authorId], references: [id])
   pinnedBy        User?       @relation("PinnedPosts", fields: [pinnedById], references: [id])
   comments        Comment[]
-  tags            Tag[]       
+  tags            Tag[]
   favorites       Favorite[]
   likes           PostLike[]
   attachments     Attachment[]
@@ -259,7 +259,7 @@ model Post {
 
 model Poll {
   id              String      @id @default(cuid())
-  postId          String      @unique 
+  postId          String      @unique
   endsAt          DateTime?
   allowMultiple   Boolean     @default(false)
   isAnonymous     Boolean     @default(false)
@@ -271,7 +271,7 @@ model Poll {
 
 model PollOption {
   id              String      @id @default(cuid())
-  pollId          String      
+  pollId          String
   text            String
   order           Int
   voteCount       Int         @default(0)
@@ -284,9 +284,9 @@ model PollOption {
 
 model PollVote {
   id              String      @id @default(cuid())
-  pollId          String      
-  optionId        String      
-  userId          String      
+  pollId          String
+  optionId        String
+  userId          String
   createdAt       DateTime    @default(now())
 
   poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
@@ -303,7 +303,7 @@ model PollVote {
 
 model Event {
   id              String      @id @default(cuid())
-  postId          String      @unique 
+  postId          String      @unique
   startDate       DateTime
   endDate         DateTime?
   location        String?
@@ -318,8 +318,8 @@ model Event {
 
 model EventRegistration {
   id              String      @id @default(cuid())
-  eventId         String      
-  userId          String      
+  eventId         String
+  userId          String
   status          String      @default("REGISTERED") // REGISTERED, WAITLIST, CANCELLED
   syncedToOutlook Boolean     @default(false)
   createdAt       DateTime    @default(now())
@@ -337,10 +337,10 @@ model EventRegistration {
 
 model Comment {
   id              String      @id @default(cuid())
-  postId          String      
-  authorId        String      
+  postId          String
+  authorId        String
   content         String
-  parentId        String?     
+  parentId        String?
   likeCount       Int         @default(0)
   isEdited        Boolean     @default(false)
   createdAt       DateTime    @default(now())
@@ -361,9 +361,9 @@ model Comment {
 
 model Favorite {
   id              String      @id @default(cuid())
-  userId          String      
-  postId          String?     
-  hubId           String?     
+  userId          String
+  postId          String?
+  hubId           String?
   type            String      // POST, HUB_PAGE
   createdAt       DateTime    @default(now())
 
@@ -403,7 +403,7 @@ model Hub {
 
 model Notification {
   id              String      @id @default(cuid())
-  userId          String      
+  userId          String
   type            String      // NEW_POST, NEW_COMMENT, etc.
   title           String
   message         String
@@ -426,12 +426,12 @@ model Tag {
   slug            String      @unique
   color           String?
 
-  posts           Post[]      
+  posts           Post[]
 }
 
 model Attachment {
   id              String      @id @default(cuid())
-  postId          String      
+  postId          String
   fileName        String
   fileUrl         String
   fileType        String
@@ -445,8 +445,8 @@ model Attachment {
 
 model PostLike {
   id        String   @id @default(cuid())
-  postId    String   
-  userId    String   
+  postId    String
+  userId    String
   createdAt DateTime @default(now())
 
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -534,11 +534,11 @@ model Quiz {
   title         String
   description   String?
   passingScore  Int       @default(60) // Percentage required to pass
-  
+
   // Relations - A quiz can belong to a module OR be a final exam for a course
   moduleId      String?   @unique
   module        TrainingModule? @relation("ModuleQuiz", fields: [moduleId], references: [id], onDelete: Cascade)
-  
+
   courseId      String?   @unique
   course        TrainingCourse? @relation("CourseFinalExam", fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -555,10 +555,10 @@ model QuizQuestion {
   text          String
   type          String    @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE, TRUE_FALSE
   order         Int       @default(0)
-  
+
   quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options       QuizOption[]
-  
+
   @@index([quizId])
 }
 
@@ -593,9 +593,9 @@ model Certificate {
   id            String    @id @default(cuid())
   userId        String
   courseId      String
-  
+
   // Metadata at time of issuance
-  userName      String 
+  userName      String
   courseTitle   String
   issuedAt      DateTime  @default(now())
   code          String    @unique // Unique certificate code for verification
