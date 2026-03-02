@@ -41,6 +41,7 @@ model User {
   eventRegistrations EventRegistration[]
   notifications   Notification[]
   likes           PostLike[]
+  postVotes       PostVote[]
   trainingProgress UserTrainingProgress[]
   quizAttempts    QuizAttempt[]
   certificates    Certificate[]
