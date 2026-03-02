@@ -19,7 +19,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/training`, lastModified: new Date() },
     { url: `${baseUrl}/support`, lastModified: new Date() },
     { url: `${baseUrl}/platform-status`, lastModified: new Date() },
-    { url: `${baseUrl}/ideas`, lastModified: new Date() }
+    { url: `${baseUrl}/ideas`, lastModified: new Date() },
+    { url: `${baseUrl}/chat`, lastModified: new Date() }
   ]
 
   return [...staticPages, ...postEntries]

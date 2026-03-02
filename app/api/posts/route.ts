@@ -10,19 +10,37 @@ export async function GET(request: Request) {
         const type = searchParams.get('type');
         const limit = searchParams.get('limit');
         const isPinned = searchParams.get('isPinned');
+        // new idea-specific parameters
+        const statusParam = searchParams.get('status');
+        const sort = searchParams.get('sort'); // trending, new, etc
+        const categoryParam = searchParams.get('category');
 
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
         const filter = searchParams.get('filter');
 
+        // build where clause
+        const whereClause: any = {
+            type: type ? (type as any) : undefined,
+            isPinned: isPinned === 'true' ? true : undefined,
+            status: statusParam ? statusParam : undefined,
+            category: categoryParam ? categoryParam : undefined,
+            favorites: filter === 'favorites' && userId ? {
+                some: { userId: userId }
+            } : undefined,
+        };
+
+        // determine orderBy
+        let orderBy: any = [{ isPinned: 'desc' }, { createdAt: 'desc' }];
+        if (sort === 'trending') {
+            // trending by likes first then comments
+            orderBy = [{ isPinned: 'desc' }, { likeCount: 'desc' }, { commentCount: 'desc' }];
+        } else if (sort === 'new') {
+            orderBy = [{ isPinned: 'desc' }, { createdAt: 'desc' }];
+        }
+
         const posts = await prisma.post.findMany({
-            where: {
-                type: type ? (type as any) : undefined,
-                isPinned: isPinned === 'true' ? true : undefined,
-                favorites: filter === 'favorites' && userId ? {
-                    some: { userId: userId }
-                } : undefined,
-            },
+            where: whereClause,
             take: limit ? parseInt(limit) : undefined,
             include: {
                 author: true,
@@ -39,10 +57,7 @@ export async function GET(request: Request) {
                     where: { userId: userId }
                 } : false,
             },
-            orderBy: [
-                { isPinned: 'desc' },
-                { createdAt: 'desc' },
-            ],
+            orderBy,
         });
 
         const postsWithStatus = posts.map((post: any) => ({
@@ -63,7 +78,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { type, title, content, imageUrl, authorId, pollOptions, pollEndsAt, allowMultiple, eventStartDate, eventEndDate, location, isVirtual, meetingLink, maxAttendees } = body;
+        const { type, title, content, imageUrl, authorId, status, category, pollOptions, pollEndsAt, allowMultiple, eventStartDate, eventEndDate, location, isVirtual, meetingLink, maxAttendees } = body;
 
         if (!type || !title || !authorId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -76,6 +91,8 @@ export async function POST(request: Request) {
                 content: content || '',
                 imageUrl,
                 authorId,
+                status: status || undefined,
+                category: category || undefined,
                 poll: type === 'POLL' ? {
                     create: {
                         endsAt: pollEndsAt ? new Date(pollEndsAt) : null,

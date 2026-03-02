@@ -227,6 +227,8 @@ model Post {
   commentCount    Int         @default(0)
   isPublished     Boolean     @default(true)
   publishedAt     DateTime?
+  status          String?     @default("NEW") // DRAFT, PUBLISHED, ARCHIVED
+  category        String?
 
   // Announcement-specific fields
   announcementType String? @default("REGULAR") // REGULAR, SHAREPOINT_LINK
@@ -234,6 +236,8 @@ model Post {
 
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+
+  postVotes       PostVote[]
 
   // Relations
   author          User        @relation("UserPosts", fields: [authorId], references: [id])
@@ -251,6 +255,19 @@ model Post {
   @@index([type, createdAt])
   @@index([isPinned, createdAt])
   @@index([authorId])
+}
+
+model PostVote {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  value     Int      // 1 voor upvote, -1 voor downvote
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
 }
 
 // ============================================
