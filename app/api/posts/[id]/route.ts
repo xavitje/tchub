@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-import { ensureStatusColumn } from '@/lib/prisma';
+import { ensurePostColumns } from '@/lib/prisma'; // Updated import
 
 export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
-        await ensureStatusColumn();
+        // Updated to use the comprehensive column check
+        await ensurePostColumns();
+
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
 
