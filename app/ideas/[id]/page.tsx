@@ -6,10 +6,11 @@ import { ArrowLeft, MessageSquare, ThumbsUp, Bookmark, Share2, MoreVertical } fr
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useNotification } from '@/components/ui/NotificationSystem';
+// re‑use the interaction components; they won't render for IDEA type
 import PollInteraction from '@/components/discussions/PollInteraction';
 import EventInteraction from '@/components/discussions/EventInteraction';
 
-export default function PostDetailPage({ params }: { params: { id: string } }) {
+export default function IdeaDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { data: session } = useSession();
     const [post, setPost] = useState<any>(null);
@@ -24,11 +25,11 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             try {
                 const res = await fetch(`/api/posts/${params.id}`);
                 const data = await res.json();
-                if (data.id) {
+                if (data.id && data.type === 'IDEA') {
                     setPost(data);
                 }
             } catch (error) {
-                console.error('Failed to fetch post:', error);
+                console.error('Failed to fetch idea:', error);
             } finally {
                 setLoading(false);
             }
@@ -39,7 +40,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
     const handleLike = async () => {
         if (!session?.user?.id) return;
 
-        // Optimistic update
         const isLiked = post.likedByMe;
         setPost({
             ...post,
@@ -51,7 +51,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             const res = await fetch(`/api/posts/${post.id}/like`, { method: 'POST' });
             if (!res.ok) throw new Error('Failed to toggle like');
         } catch (error) {
-            // Revert on error
             setPost({
                 ...post,
                 likedByMe: isLiked,
@@ -144,7 +143,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
             const data = await res.json();
             if (data.id) {
-                // Find parent comment and add reply
                 const updatedComments = post.comments.map((c: any) => {
                     if (c.id === commentId) {
                         return {
@@ -180,8 +178,8 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
     if (!post) {
         return (
             <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-                <h1 className="text-2xl font-bold mb-4">Post niet gevonden</h1>
-                <Link href="/discussions" className="text-primary hover:underline">Terug naar discussies</Link>
+                <h1 className="text-2xl font-bold mb-4">Idee niet gevonden</h1>
+                <Link href="/ideas" className="text-primary hover:underline">Terug naar ideeën</Link>
             </div>
         );
     }
@@ -219,6 +217,17 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
                     <h1 className="text-3xl font-bold text-dark mb-4">{post.title}</h1>
 
+                    {post.category && (
+                        <span className="badge bg-primary-50 text-primary text-xs mb-2 inline-block">{post.category}</span>
+                    )}
+                    {post.status && (
+                        <span className={`badge text-xs mb-2 ml-2 ${
+                            post.status === 'In Behandeling' ? 'bg-warning/20 text-warning' :
+                            post.status === 'Onder Review' ? 'bg-info/20 text-info' :
+                            'bg-light-300 text-dark-100'
+                        }`}>{post.status}</span>
+                    )}
+
                     {post.imageUrl && (
                         <img
                             src={post.imageUrl}
@@ -231,11 +240,10 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                         <p className="text-dark-100 whitespace-pre-line">{post.content}</p>
                     </div>
 
-                    {/* Interactive Content (Poll or Event) */}
+                    {/* interactions (should not render for IDEA) */}
                     {post.type === 'POLL' && post.poll && (
                         <PollInteraction postId={post.id} poll={post.poll} />
                     )}
-
                     {post.type === 'EVENT' && post.event && (
                         <EventInteraction postId={post.id} event={post.event} />
                     )}
@@ -266,11 +274,11 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
+                {/* Comment section identical to discussions, omitted for brevity */}
                 <div className="card p-6">
                     <h2 className="text-xl font-semibold text-dark mb-6">
                         Reacties ({post.commentCount})
                     </h2>
-
                     <form onSubmit={handleCommentSubmit} className="mb-8">
                         <textarea
                             value={newComment}
@@ -285,7 +293,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                             </button>
                         </div>
                     </form>
-
                     <div className="space-y-6">
                         {(post.comments || []).map((comment: any) => (
                             <div key={comment.id} className="border-b border-light-400 pb-6 last:border-0">

@@ -14,6 +14,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: post.updatedAt,
   }))
 
+  const ideaEntries = posts
+    .filter((post: any) => post.type === 'IDEA')
+    .map((post: { id: string; updatedAt: Date }) => ({
+      url: `${baseUrl}/ideas/${post.id}`,
+      lastModified: post.updatedAt,
+    }));
+
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date() },
     { url: `${baseUrl}/training`, lastModified: new Date() },
@@ -23,5 +30,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/chat`, lastModified: new Date() }
   ]
 
-  return [...staticPages, ...postEntries]
+  return [...staticPages, ...postEntries, ...ideaEntries]
 }

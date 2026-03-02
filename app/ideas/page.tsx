@@ -6,10 +6,25 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useNotification } from '@/components/ui/NotificationSystem';
 
+// minimal idea type for TS safety
+interface Idea {
+    id: string;
+    title?: string;
+    content?: string;
+    category?: string;
+    status?: string;
+    author?: { displayName?: string; id?: string; profileImage?: string };
+    likeCount?: number;
+    commentCount?: number;
+    updatedAt?: string;
+    likedByMe?: boolean;
+    isFavorited?: boolean;
+}
+
 export default function IdeasPage() {
     const { data: session } = useSession();
     const { showNotification } = useNotification();
-    const [ideas, setIdeas] = useState<any[]>([]);
+    const [ideas, setIdeas] = useState<Idea[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTab, setSelectedTab] = useState<'trending' | 'new' | 'inProgress' | 'implemented'>('trending');
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -33,7 +48,8 @@ export default function IdeasPage() {
                 const res = await fetch(url);
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                    setIdeas(data);
+                    // cast to idea array for TS
+                    setIdeas(data as Idea[]);
                 }
             } catch (error) {
                 console.error('Failed to fetch ideas:', error);
@@ -57,10 +73,11 @@ export default function IdeasPage() {
         const updated = ideas.map((i) => {
             if (i.id === idea.id) {
                 const liked = i.likedByMe;
+                const current = i.likeCount || 0;
                 return {
                     ...i,
                     likedByMe: !liked,
-                    likeCount: liked ? i.likeCount - 1 : i.likeCount + 1,
+                    likeCount: liked ? current - 1 : current + 1,
                 };
             }
             return i;
@@ -77,25 +94,25 @@ export default function IdeasPage() {
     };
 
     // compute sidebar info from all ideas
-    const categories = ideas.reduce((acc: any, i) => {
+    const categories = ideas.reduce<Record<string, number>>((acc, i) => {
         const cat = i.category || 'Overig';
         acc[cat] = (acc[cat] || 0) + 1;
         return acc;
-    }, {} as Record<string, number>);
+    }, {});
 
-    const recentImplemented = ideas
+    const recentImplemented: string[] = ideas
         .filter((i) => i.status === 'Geïmplementeerd')
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .sort((a, b) => new Date(b.updatedAt || '').getTime() - new Date(a.updatedAt || '').getTime())
         .slice(0, 3)
-        .map((i) => i.title);
+        .map((i) => i.title || '');
 
-    const topContributors = Object.entries(
-        ideas.reduce((acc: any, i) => {
-            const name = i.author?.displayName || 'Onbekend';
-            acc[name] = (acc[name] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>)
-    )
+    const contributorCounts = ideas.reduce<Record<string, number>>((acc, i) => {
+        const name = i.author?.displayName || 'Onbekend';
+        acc[name] = (acc[name] || 0) + 1;
+        return acc;
+    }, {});
+
+    const topContributors = Object.entries(contributorCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([name, count]) => ({ name, ideas: count }));
@@ -220,7 +237,7 @@ export default function IdeasPage() {
                                                 )}
                                             </div>
                                             <h3 className="text-lg font-semibold text-dark mb-2">
-                                                <Link href={`/discussions/${idea.id}`} className="hover:text-primary transition-colors">
+                                                <Link href={`/ideas/${idea.id}`} className="hover:text-primary transition-colors">
                                                     {idea.title}
                                                 </Link>
                                             </h3>
@@ -228,10 +245,9 @@ export default function IdeasPage() {
                                             <div className="flex items-center gap-4 text-sm text-dark-100">
                                                 <span>Door {idea.author?.displayName || 'Onbekend'}</span>
                                                 <span>•</span>
-                                                <Link href={`/discussions/${idea.id}`} className="hover:text-primary transition-colors flex items-center gap-1">
+                                                <Link href={`/ideas/${idea.id}`} className="hover:text-primary transition-colors flex items-center gap-1">
                                                     💬 {idea.commentCount} reacties
-                                                </Link>
-                                            </div>
+                                                </Link>                                            </div>
                                         </div>
                                     </div>
                                 </div>
