@@ -7,8 +7,6 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 const libsql = createClient({
-    // Vercel build sometimes doesn't have env vars during static analysis,
-    // so we provide a dummy URL to prevent the LibsqlError: URL_INVALID crash.
     url: process.env.TURSO_DATABASE_URL || "libsql://placeholder-for-build.turso.io",
     authToken: process.env.TURSO_AUTH_TOKEN || "",
 })
@@ -40,7 +38,7 @@ async function ensurePostColumns() {
             await prisma.$executeRaw`UPDATE "Post" SET "status" = 'NEW' WHERE "status" IS NULL;`;
         }
 
-        // Check and add 'category'
+        // Check and add 'category' (Caused the build crash in turn 1)
         if (!columns.includes('category')) {
             await prisma.$executeRaw`ALTER TABLE "Post" ADD COLUMN "category" TEXT;`;
         }

@@ -2,16 +2,14 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { ensurePostColumns } from '@/lib/prisma'; // Updated import
+import { ensurePostColumns } from '@/lib/prisma';
 
 export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
-        // Updated to use the comprehensive column check
         await ensurePostColumns();
-
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
 
@@ -19,38 +17,17 @@ export async function GET(
             where: { id: params.id },
             include: {
                 author: true,
-                event: {
-                    include: {
-                        registrations: true,
-                    },
-                },
-                poll: {
-                    include: {
-                        options: true,
-                        votes: true,
-                    }
-                },
-                favorites: userId ? {
-                    where: { userId: userId }
-                } : false,
-                likes: userId ? {
-                    where: { userId: userId }
-                } : false,
+                event: { include: { registrations: true } },
+                poll: { include: { options: true, votes: true } },
+                favorites: userId ? { where: { userId: userId } } : false,
+                likes: userId ? { where: { userId: userId } } : false,
                 comments: {
                     include: {
                         author: true,
-                        replies: {
-                            include: {
-                                author: true,
-                            },
-                        },
+                        replies: { include: { author: true } },
                     },
-                    where: {
-                        parentId: null, // Only top-level comments
-                    },
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
+                    where: { parentId: null },
+                    orderBy: { createdAt: 'desc' },
                 },
             },
         });
