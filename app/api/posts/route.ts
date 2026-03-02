@@ -4,8 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+import { ensureStatusColumn } from '@/lib/prisma';
+
 export async function GET(request: Request) {
     try {
+        await ensureStatusColumn();
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const limit = searchParams.get('limit');

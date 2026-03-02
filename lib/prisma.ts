@@ -45,7 +45,7 @@ async function ensureStatusColumn() {
     }
 }
 
-// ensure before exporting
-await ensureStatusColumn();
+// expose helper but don't await here
+export { ensureStatusColumn };
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

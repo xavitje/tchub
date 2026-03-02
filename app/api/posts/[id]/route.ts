@@ -4,11 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+import { ensureStatusColumn } from '@/lib/prisma';
+
 export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
+        await ensureStatusColumn();
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
 

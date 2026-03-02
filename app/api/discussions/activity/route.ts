@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+import { ensureStatusColumn } from '@/lib/prisma';
+
 export async function GET() {
     try {
+        // ensure column exists before querying
+        await ensureStatusColumn();
         // Get recent comments
         const recentComments = await prisma.comment.findMany({
             take: 3,
