@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-import { ensureStatusColumn } from '@/lib/prisma';
+import { ensurePostColumns } from '@/lib/prisma';
 
 export async function GET() {
     try {
-        // ensure column exists before querying
-        await ensureStatusColumn();
+        // ensure all required columns exist before querying to prevent build crashes
+        await ensurePostColumns();
+
         // Get recent comments
         const recentComments = await prisma.comment.findMany({
             take: 3,
@@ -51,19 +51,19 @@ export async function GET() {
 
         // Combine and format activities
         const activities = [
-            ...recentComments.map((c: typeof recentComments[0]) => ({
+            ...recentComments.map((c: any) => ({
                 type: 'comment',
                 text: `${c.author.displayName} heeft gereageerd op "${c.post.title}"`,
                 link: `/discussions/${c.post.id}`,
                 createdAt: c.createdAt
             })),
-            ...recentLikes.map((l: typeof recentLikes[0]) => ({
+            ...recentLikes.map((l: any) => ({
                 type: 'like',
                 text: `${l.user.displayName} heeft "${l.post.title}" geliked`,
                 link: `/discussions/${l.post.id}`,
                 createdAt: l.createdAt
             })),
-            ...recentPosts.map((p: typeof recentPosts[0]) => ({
+            ...recentPosts.map((p: any) => ({
                 type: p.type === 'POLL' ? 'poll' : 'post',
                 text: p.type === 'POLL'
                     ? `Nieuwe poll: "${p.title}"`

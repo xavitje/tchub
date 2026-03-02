@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-import { ensureStatusColumn } from '@/lib/prisma';
+import { ensurePostColumns } from '@/lib/prisma';
 
 export async function GET(request: Request) {
     try {
-        await ensureStatusColumn();
+        // Ensure all required columns exist before querying
+        await ensurePostColumns();
+
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const limit = searchParams.get('limit');
         const isPinned = searchParams.get('isPinned');
-        // new idea-specific parameters
         const statusParam = searchParams.get('status');
-        const sort = searchParams.get('sort'); // trending, new, etc
+        const sort = searchParams.get('sort');
         const categoryParam = searchParams.get('category');
 
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
         const filter = searchParams.get('filter');
 
-        // build where clause
         const whereClause: any = {
             type: type ? (type as any) : undefined,
             isPinned: isPinned === 'true' ? true : undefined,
@@ -33,10 +31,8 @@ export async function GET(request: Request) {
             } : undefined,
         };
 
-        // determine orderBy
         let orderBy: any = [{ isPinned: 'desc' }, { createdAt: 'desc' }];
         if (sort === 'trending') {
-            // trending by likes first then comments
             orderBy = [{ isPinned: 'desc' }, { likeCount: 'desc' }, { commentCount: 'desc' }];
         } else if (sort === 'new') {
             orderBy = [{ isPinned: 'desc' }, { createdAt: 'desc' }];
@@ -81,7 +77,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { type, title, content, imageUrl, authorId, status, category, pollOptions, pollEndsAt, allowMultiple, eventStartDate, eventEndDate, location, isVirtual, meetingLink, maxAttendees } = body;
+        const {
+            type, title, content, imageUrl, authorId, status, category,
+            pollOptions, pollEndsAt, allowMultiple,
+            eventStartDate, eventEndDate, location, isVirtual, meetingLink, maxAttendees
+        } = body;
 
         if (!type || !title || !authorId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -129,6 +129,7 @@ export async function POST(request: Request) {
                 event: true,
             },
         });
+
         const users = await prisma.user.findMany({
             where: {
                 id: { not: authorId },
@@ -146,7 +147,6 @@ export async function POST(request: Request) {
                 link: `/discussions/${post.id}`
             }));
 
-            // SQLite doesn't support createMany, so we use a loop or Promise.all
             for (const data of notificationData) {
                 await prisma.notification.create({ data: data as any }).catch((err: any) => {
                     console.error('Error creating notification during post creation:', err);

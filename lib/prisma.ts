@@ -22,30 +22,43 @@ export const prisma =
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     })
 
-// After client creation ensure legacy column 'status' exists in SQLite DB used during build
-// This avoids SQL_INPUT_ERROR when the schema has the field but the file lacks it.
-async function ensureStatusColumn() {
+/**
+ * Ensures required columns exist in the SQLite DB used during the build.
+ * This prevents SQL_INPUT_ERROR when the schema expects fields the build-file lacks.
+ */
+async function ensurePostColumns() {
     try {
         const infos: Array<{ name: string }> = await prisma.$queryRaw`
             PRAGMA table_info("Post");
         `;
-        const has = infos.some((i) => i.name === 'status');
-        if (!has) {
-            // add nullable text column with default NEW (mimic schema)
-            await prisma.$executeRaw`
-                ALTER TABLE "Post" ADD COLUMN "status" TEXT;
-            `;
-            // sqlite can't add default via ALTER so set manually
-            await prisma.$executeRaw`
-                UPDATE "Post" SET "status" = 'NEW' WHERE "status" IS NULL;
-            `;
+
+        const columns = infos.map(i => i.name);
+
+        // Check and add 'status'
+        if (!columns.includes('status')) {
+            await prisma.$executeRaw`ALTER TABLE "Post" ADD COLUMN "status" TEXT;`;
+            await prisma.$executeRaw`UPDATE "Post" SET "status" = 'NEW' WHERE "status" IS NULL;`;
+        }
+
+        // Check and add 'category'
+        if (!columns.includes('category')) {
+            await prisma.$executeRaw`ALTER TABLE "Post" ADD COLUMN "category" TEXT;`;
+        }
+
+        // Check and add announcement fields to prevent future build crashes
+        if (!columns.includes('announcementType')) {
+            await prisma.$executeRaw`ALTER TABLE "Post" ADD COLUMN "announcementType" TEXT;`;
+            await prisma.$executeRaw`UPDATE "Post" SET "announcementType" = 'REGULAR' WHERE "announcementType" IS NULL;`;
+        }
+
+        if (!columns.includes('sharePointUrl')) {
+            await prisma.$executeRaw`ALTER TABLE "Post" ADD COLUMN "sharePointUrl" TEXT;`;
         }
     } catch (e) {
-        console.error('Error ensuring status column on Post table:', e);
+        console.error('Error ensuring columns on Post table:', e);
     }
 }
 
-// expose helper but don't await here
-export { ensureStatusColumn };
+export { ensurePostColumns };
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
