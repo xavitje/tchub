@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -16,59 +16,59 @@ datasource db {
 // ============================================
 
 model User {
-  id              String    @id @default(cuid())
-  azureAdId       String?   @unique
-  email           String    @unique
-  displayName     String
-  firstName       String?
-  lastName        String?
-  department      String?
-  jobTitle        String?
-  profileImage    String?
-  role            String    @default("EMPLOYEE") // Legacy: remove after migration
-  roleId          String?
-  customRole      Role?     @relation(fields: [roleId], references: [id])
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  azureAdId    String?  @unique
+  email        String   @unique
+  displayName  String
+  firstName    String?
+  lastName     String?
+  department   String?
+  jobTitle     String?
+  profileImage String?
+  role         String   @default("EMPLOYEE") // Legacy: remove after migration
+  roleId       String?
+  customRole   Role?    @relation(fields: [roleId], references: [id])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  posts           Post[]    @relation("UserPosts")
-  pinnedPosts     Post[]    @relation("PinnedPosts")
-  comments        Comment[]
-  favorites       Favorite[]
-  pollVotes       PollVote[]
+  posts              Post[]                 @relation("UserPosts")
+  pinnedPosts        Post[]                 @relation("PinnedPosts")
+  comments           Comment[]
+  favorites          Favorite[]
+  pollVotes          PollVote[]
   eventRegistrations EventRegistration[]
-  notifications   Notification[]
-  likes           PostLike[]
-  postVotes       PostVote[]
-  trainingProgress UserTrainingProgress[]
-  quizAttempts    QuizAttempt[]
-  certificates    Certificate[]
-  tickets         SupportTicket[] @relation("UserTickets")
-  assignedTickets SupportTicket[] @relation("AssignedTickets")
-  ticketMessages  TicketMessage[]
+  notifications      Notification[]
+  likes              PostLike[]
+  postVotes          PostVote[]
+  trainingProgress   UserTrainingProgress[]
+  quizAttempts       QuizAttempt[]
+  certificates       Certificate[]
+  tickets            SupportTicket[]        @relation("UserTickets")
+  assignedTickets    SupportTicket[]        @relation("AssignedTickets")
+  ticketMessages     TicketMessage[]
 
   // Settings & Chat
-  settings        UserSettings?
-  quickLinks      QuickLink[]      @relation("QuickLinks")
-  conversations   Conversation[]
-  messages        Message[]
+  settings      UserSettings?
+  quickLinks    QuickLink[]    @relation("QuickLinks")
+  conversations Conversation[]
+  messages      Message[]
 
   // Chat Extras
-  chatSettings    ConversationSettings[]
-  messageReads    MessageRead[]
+  chatSettings     ConversationSettings[]
+  messageReads     MessageRead[]
   typingIndicators TypingIndicator[]
 }
 
 model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String       @id @default(cuid())
+  name        String       @unique
   description String?
-  permissions   Permission[]
-  users         User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Permission {
@@ -85,27 +85,27 @@ model Permission {
 // ============================================
 
 model UserSettings {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  theme           String    @default("SYSTEM")
-  headerOrder     String    @default("home,discussions,training,hubs,support")
-  emailNotifications Boolean  @default(true)
-  pushNotifications  Boolean  @default(true)
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  theme              String  @default("SYSTEM")
+  headerOrder        String  @default("home,discussions,training,hubs,support")
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model QuickLink {
-  id              String    @id @default(cuid())
-  userId          String
-  title           String
-  url             String
-  icon            String?
-  order           Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  url       String
+  icon      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user            User      @relation("QuickLinks", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("QuickLinks", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, order])
 }
@@ -115,143 +115,142 @@ model QuickLink {
 // ============================================
 
 model Conversation {
-  id              String    @id @default(cuid())
-  name            String?   // For group chats
-  isGroup         Boolean   @default(false)
-  image           String?   // For group chats
-  lastMessageAt   DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String   @id @default(cuid())
+  name          String? // For group chats
+  isGroup       Boolean  @default(false)
+  image         String? // For group chats
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  users           User[]
+  users User[]
 
-  messages        Message[]
+  messages Message[]
 
   // Extras
-  settings        ConversationSettings[]
+  settings ConversationSettings[]
 
   @@index([lastMessageAt])
 }
 
 model Message {
-  id              String    @id @default(cuid())
-  conversationId  String
-  senderId        String
-  content         String?
-  image           String?
-  fileUrl         String?
-  fileName        String?
-  isEdited        Boolean   @default(false)
-  editedAt        DateTime?
-  deletedAt       DateTime? // Soft delete
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String?
+  image          String?
+  fileUrl        String?
+  fileName       String?
+  isEdited       Boolean   @default(false)
+  editedAt       DateTime?
+  deletedAt      DateTime? // Soft delete
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender          User         @relation(fields: [senderId], references: [id])
-  reactions       Reaction[]
-  reads           MessageRead[]
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User          @relation(fields: [senderId], references: [id])
+  reactions    Reaction[]
+  reads        MessageRead[]
 
-  replyToId      String?
-  replyTo        Message? @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies        Message[] @relation("ReplyTo")
+  replyToId String?
+  replyTo   Message?  @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Message[] @relation("ReplyTo")
 
   @@index([conversationId, createdAt])
 }
 
 model Reaction {
-  id              String    @id @default(cuid())
-  messageId       String
-  userId          String
-  emoji           String
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
 
-  message         Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
 }
 
 model ConversationSettings {
-  id              String   @id @default(cuid())
-  conversationId  String
-  userId          String
-  isMuted         Boolean  @default(false)
-  mutedUntil      DateTime?
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  isMuted        Boolean   @default(false)
+  mutedUntil     DateTime?
 
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
 }
 
 model TypingIndicator {
-  id              String   @id @default(cuid())
-  conversationId  String
-  userId          String
-  lastTypingAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  lastTypingAt   DateTime @default(now())
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
   @@index([conversationId, lastTypingAt])
 }
 
 model MessageRead {
-  id         String   @id @default(cuid())
-  messageId  String
-  userId     String
-  readAt     DateTime @default(now())
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
 
-  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
 }
-
 
 // ============================================
 // POSTS & CONTENT
 // ============================================
 
 model Post {
-  id              String      @id @default(cuid())
-  type            String      // POST, POLL, EVENT, ANNOUNCEMENT
-  title           String
-  content         String
-  imageUrl        String?
-  authorId        String
-  isPinned        Boolean     @default(false)
-  pinnedAt        DateTime?
-  pinnedById      String?
-  viewCount       Int         @default(0)
-  likeCount       Int         @default(0)
-  commentCount    Int         @default(0)
-  isPublished     Boolean     @default(true)
-  publishedAt     DateTime?
-  status          String?     @default("NEW") // DRAFT, PUBLISHED, ARCHIVED
-  category        String?
+  id           String    @id @default(cuid())
+  type         String // POST, POLL, EVENT, ANNOUNCEMENT
+  title        String
+  content      String
+  imageUrl     String?
+  authorId     String
+  isPinned     Boolean   @default(false)
+  pinnedAt     DateTime?
+  pinnedById   String?
+  viewCount    Int       @default(0)
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  isPublished  Boolean   @default(true)
+  publishedAt  DateTime?
+  status       String?   @default("NEW") // DRAFT, PUBLISHED, ARCHIVED
+  category     String?
 
   // Announcement-specific fields
   announcementType String? @default("REGULAR") // REGULAR, SHAREPOINT_LINK
-  sharePointUrl     String?
+  sharePointUrl    String?
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  postVotes       PostVote[]
+  postVotes PostVote[]
 
   // Relations
-  author          User        @relation("UserPosts", fields: [authorId], references: [id])
-  pinnedBy        User?       @relation("PinnedPosts", fields: [pinnedById], references: [id])
-  comments        Comment[]
-  tags            Tag[]
-  favorites       Favorite[]
-  likes           PostLike[]
-  attachments     Attachment[]
+  author      User         @relation("UserPosts", fields: [authorId], references: [id])
+  pinnedBy    User?        @relation("PinnedPosts", fields: [pinnedById], references: [id])
+  comments    Comment[]
+  tags        Tag[]
+  favorites   Favorite[]
+  likes       PostLike[]
+  attachments Attachment[]
 
   // Type-specific data
-  poll            Poll?
-  event           Event?
+  poll  Poll?
+  event Event?
 
   @@index([type, createdAt])
   @@index([isPinned, createdAt])
@@ -262,11 +261,11 @@ model PostVote {
   id        String   @id @default(cuid())
   postId    String
   userId    String
-  value     Int      // 1 voor upvote, -1 voor downvote
+  value     Int // 1 voor upvote, -1 voor downvote
   createdAt DateTime @default(now())
 
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
 }
@@ -276,40 +275,40 @@ model PostVote {
 // ============================================
 
 model Poll {
-  id              String      @id @default(cuid())
-  postId          String      @unique
-  endsAt          DateTime?
-  allowMultiple   Boolean     @default(false)
-  isAnonymous     Boolean     @default(false)
+  id            String    @id @default(cuid())
+  postId        String    @unique
+  endsAt        DateTime?
+  allowMultiple Boolean   @default(false)
+  isAnonymous   Boolean   @default(false)
 
-  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  options         PollOption[]
-  votes           PollVote[]
+  post    Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
 }
 
 model PollOption {
-  id              String      @id @default(cuid())
-  pollId          String
-  text            String
-  order           Int
-  voteCount       Int         @default(0)
+  id        String @id @default(cuid())
+  pollId    String
+  text      String
+  order     Int
+  voteCount Int    @default(0)
 
-  poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes           PollVote[]
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
 
   @@index([pollId])
 }
 
 model PollVote {
-  id              String      @id @default(cuid())
-  pollId          String
-  optionId        String
-  userId          String
-  createdAt       DateTime    @default(now())
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
 
-  poll            Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  option          PollOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  user            User        @relation(fields: [userId], references: [id])
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id])
 
   @@unique([pollId, userId, optionId])
   @@index([userId])
@@ -320,30 +319,30 @@ model PollVote {
 // ============================================
 
 model Event {
-  id              String      @id @default(cuid())
-  postId          String      @unique
-  startDate       DateTime
-  endDate         DateTime?
-  location        String?
-  isVirtual       Boolean     @default(false)
-  meetingLink     String?
-  maxAttendees    Int?
+  id                   String    @id @default(cuid())
+  postId               String    @unique
+  startDate            DateTime
+  endDate              DateTime?
+  location             String?
+  isVirtual            Boolean   @default(false)
+  meetingLink          String?
+  maxAttendees         Int?
   registrationDeadline DateTime?
 
-  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  registrations   EventRegistration[]
+  post          Post                @relation(fields: [postId], references: [id], onDelete: Cascade)
+  registrations EventRegistration[]
 }
 
 model EventRegistration {
-  id              String      @id @default(cuid())
+  id              String   @id @default(cuid())
   eventId         String
   userId          String
-  status          String      @default("REGISTERED") // REGISTERED, WAITLIST, CANCELLED
-  syncedToOutlook Boolean     @default(false)
-  createdAt       DateTime    @default(now())
+  status          String   @default("REGISTERED") // REGISTERED, WAITLIST, CANCELLED
+  syncedToOutlook Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
-  event           Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user            User        @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
 
   @@unique([eventId, userId])
   @@index([userId])
@@ -354,20 +353,20 @@ model EventRegistration {
 // ============================================
 
 model Comment {
-  id              String      @id @default(cuid())
-  postId          String
-  authorId        String
-  content         String
-  parentId        String?
-  likeCount       Int         @default(0)
-  isEdited        Boolean     @default(false)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  parentId  String?
+  likeCount Int      @default(0)
+  isEdited  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author          User        @relation(fields: [authorId], references: [id])
-  parent          Comment?    @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies         Comment[]   @relation("CommentReplies")
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User      @relation(fields: [authorId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies Comment[] @relation("CommentReplies")
 
   @@index([postId, createdAt])
   @@index([authorId])
@@ -378,16 +377,16 @@ model Comment {
 // ============================================
 
 model Favorite {
-  id              String      @id @default(cuid())
-  userId          String
-  postId          String?
-  hubId           String?
-  type            String      // POST, HUB_PAGE
-  createdAt       DateTime    @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  hubId     String?
+  type      String // POST, HUB_PAGE
+  createdAt DateTime @default(now())
 
-  user            User        @relation(fields: [userId], references: [id])
-  post            Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
-  hub             Hub?        @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hub  Hub?  @relation(fields: [hubId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@unique([userId, hubId])
@@ -399,18 +398,18 @@ model Favorite {
 // ============================================
 
 model Hub {
-  id              String      @id @default(cuid())
-  name            String
-  slug            String      @unique
-  description     String?
-  icon            String?
-  sharePointUrl   String?
-  order           Int
-  isActive        Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  icon          String?
+  sharePointUrl String?
+  order         Int
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  favorites       Favorite[]
+  favorites Favorite[]
 
   @@index([order])
 }
@@ -420,16 +419,16 @@ model Hub {
 // ============================================
 
 model Notification {
-  id              String      @id @default(cuid())
-  userId          String
-  type            String      // NEW_POST, NEW_COMMENT, etc.
-  title           String
-  message         String
-  link            String?
-  isRead          Boolean     @default(false)
-  createdAt       DateTime    @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // NEW_POST, NEW_COMMENT, etc.
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  user            User        @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, isRead, createdAt])
 }
@@ -439,24 +438,24 @@ model Notification {
 // ============================================
 
 model Tag {
-  id              String      @id @default(cuid())
-  name            String      @unique
-  slug            String      @unique
-  color           String?
+  id    String  @id @default(cuid())
+  name  String  @unique
+  slug  String  @unique
+  color String?
 
-  posts           Post[]
+  posts Post[]
 }
 
 model Attachment {
-  id              String      @id @default(cuid())
-  postId          String
-  fileName        String
-  fileUrl         String
-  fileType        String
-  fileSize        Int
-  createdAt       DateTime    @default(now())
+  id        String   @id @default(cuid())
+  postId    String
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  createdAt DateTime @default(now())
 
-  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([postId])
 }
@@ -467,8 +466,8 @@ model PostLike {
   userId    String
   createdAt DateTime @default(now())
 
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
   @@index([userId])
@@ -479,147 +478,147 @@ model PostLike {
 // ============================================
 
 model TrainingCourse {
-  id            String    @id @default(cuid())
-  title         String
-  description   String
-  imageUrl      String?
-  level         String    @default("BEGINNER") // BEGINNER, INTERMEDIATE, ADVANCED
-  duration      String?   // e.g. "2 uur"
-  category      String    @default("GENERAL") // GENERAL, SALES, MARKETING, PRODUCT
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  level       String   @default("BEGINNER") // BEGINNER, INTERMEDIATE, ADVANCED
+  duration    String? // e.g. "2 uur"
+  category    String   @default("GENERAL") // GENERAL, SALES, MARKETING, PRODUCT
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  modules       TrainingModule[]
-  progress      UserTrainingProgress[]
-  finalExam     Quiz?             @relation("CourseFinalExam")
-  certificates  Certificate[]
+  modules      TrainingModule[]
+  progress     UserTrainingProgress[]
+  finalExam    Quiz?                  @relation("CourseFinalExam")
+  certificates Certificate[]
 }
 
 model TrainingModule {
-  id            String    @id @default(cuid())
-  courseId      String
-  title         String
-  description   String?
-  order         Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons       TrainingLesson[]
-  quiz          Quiz?          @relation("ModuleQuiz")
+  course  TrainingCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons TrainingLesson[]
+  quiz    Quiz?            @relation("ModuleQuiz")
 
   @@index([courseId, order])
 }
 
 model TrainingLesson {
-  id            String    @id @default(cuid())
-  moduleId      String
-  title         String
-  content       String?   // Rich text content
-  videoUrl      String?
-  quiz          String?   // JSON string of quiz data: { question: string, options: string[], correct: number }
-  order         Int       @default(0)
-  duration      Int?      // Minutes
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  moduleId  String
+  title     String
+  content   String? // Rich text content
+  videoUrl  String?
+  quiz      String? // JSON string of quiz data: { question: string, options: string[], correct: number }
+  order     Int      @default(0)
+  duration  Int? // Minutes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  module        TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress      UserTrainingProgress[]
+  module   TrainingModule         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress UserTrainingProgress[]
 
   @@index([moduleId, order])
 }
 
 model UserTrainingProgress {
-  id            String    @id @default(cuid())
-  userId        String
-  courseId      String
-  lessonId      String
-  status        String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
-  lastAccessed  DateTime  @default(now())
-  completedAt   DateTime?
+  id           String    @id @default(cuid())
+  userId       String
+  courseId     String
+  lessonId     String
+  status       String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  lastAccessed DateTime  @default(now())
+  completedAt  DateTime?
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lesson        TrainingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson TrainingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([userId, courseId])
 }
 
 model Quiz {
-  id            String    @id @default(cuid())
-  title         String
-  description   String?
-  passingScore  Int       @default(60) // Percentage required to pass
+  id           String  @id @default(cuid())
+  title        String
+  description  String?
+  passingScore Int     @default(60) // Percentage required to pass
 
   // Relations - A quiz can belong to a module OR be a final exam for a course
-  moduleId      String?   @unique
-  module        TrainingModule? @relation("ModuleQuiz", fields: [moduleId], references: [id], onDelete: Cascade)
+  moduleId String?         @unique
+  module   TrainingModule? @relation("ModuleQuiz", fields: [moduleId], references: [id], onDelete: Cascade)
 
-  courseId      String?   @unique
-  course        TrainingCourse? @relation("CourseFinalExam", fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String?         @unique
+  course   TrainingCourse? @relation("CourseFinalExam", fields: [courseId], references: [id], onDelete: Cascade)
 
-  questions     QuizQuestion[]
-  attempts      QuizAttempt[]
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model QuizQuestion {
-  id            String    @id @default(cuid())
-  quizId        String
-  text          String
-  type          String    @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE, TRUE_FALSE
-  order         Int       @default(0)
+  id     String @id @default(cuid())
+  quizId String
+  text   String
+  type   String @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE, TRUE_FALSE
+  order  Int    @default(0)
 
-  quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  options       QuizOption[]
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuizOption[]
 
   @@index([quizId])
 }
 
 model QuizOption {
-  id            String    @id @default(cuid())
-  questionId    String
-  text          String
-  isCorrect     Boolean   @default(false)
-  order         Int       @default(0)
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  order      Int     @default(0)
 
-  question      QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
 }
 
 model QuizAttempt {
-  id            String    @id @default(cuid())
-  quizId        String
-  userId        String
-  score         Int       // Percentage score
-  passed        Boolean   @default(false)
-  answers       String?   // JSON string of answers given (optional, for review)
-  createdAt     DateTime  @default(now())
+  id        String   @id @default(cuid())
+  quizId    String
+  userId    String
+  score     Int // Percentage score
+  passed    Boolean  @default(false)
+  answers   String? // JSON string of answers given (optional, for review)
+  createdAt DateTime @default(now())
 
-  quiz          Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, quizId])
 }
 
 model Certificate {
-  id            String    @id @default(cuid())
-  userId        String
-  courseId      String
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
 
   // Metadata at time of issuance
-  userName      String
-  courseTitle   String
-  issuedAt      DateTime  @default(now())
-  code          String    @unique // Unique certificate code for verification
+  userName    String
+  courseTitle String
+  issuedAt    DateTime @default(now())
+  code        String   @unique // Unique certificate code for verification
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -630,19 +629,19 @@ model Certificate {
 // ============================================
 
 model SupportTicket {
-  id            String    @id @default(cuid())
-  userId        String
-  subject       String
-  category      String    // TECHNICAL, HR, TRAVEL, OTHER
-  priority      String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  status        String    @default("OPEN") // OPEN, IN_PROGRESS, WAITING_FOR_USER, RESOLVED, CLOSED
-  assignedToId  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  subject      String
+  category     String // TECHNICAL, HR, TRAVEL, OTHER
+  priority     String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status       String   @default("OPEN") // OPEN, IN_PROGRESS, WAITING_FOR_USER, RESOLVED, CLOSED
+  assignedToId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user          User      @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
-  assignedTo    User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
-  messages      TicketMessage[]
+  user       User            @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+  assignedTo User?           @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  messages   TicketMessage[]
 
   @@index([userId])
   @@index([status])
@@ -650,16 +649,16 @@ model SupportTicket {
 }
 
 model TicketMessage {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   ticketId      String
   senderId      String
   content       String
   attachmentUrl String?
-  isInternal    Boolean   @default(false) // For admin-only notes
-  createdAt     DateTime  @default(now())
+  isInternal    Boolean  @default(false) // For admin-only notes
+  createdAt     DateTime @default(now())
 
-  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender        User          @relation(fields: [senderId], references: [id])
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id])
 
   @@index([ticketId, createdAt])
 }
